@@ -63,6 +63,13 @@
   box-sizing: border-box;
 }
 
+/* Earth link bar on top, page below it filling the rest of the screen. */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -106,7 +113,9 @@ button {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  min-height: 100vh;
+  /* Fills the space under the Earth link bar (see #root). */
+  flex: 1;
+  width: 100%;
 }
 
 .topbar {
@@ -339,15 +348,190 @@ button {
 .today {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(340px, 1fr);
-  gap: 24px;
+  grid-template-areas:
+    'map card'
+    'map panel';
+  grid-template-rows: auto 1fr;
+  gap: 20px 24px;
   align-items: start;
   flex: 1;
 }
 
+.map-area {
+  grid-area: map;
+}
+.action-card {
+  grid-area: card;
+}
+.panel {
+  grid-area: panel;
+}
+
+/* Narrow: the One Action comes first — actionable protocol before the map. */
 @media (max-width: 960px) {
   .today {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'card'
+      'map'
+      'panel';
+    grid-template-rows: auto;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Earth link bar (always on top)                                     */
+/* ------------------------------------------------------------------ */
+
+.earth-link {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgb(8 11 16 / 0.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+/* Same width and gutters as .app, so the bar lines up with the page. */
+.earth-link-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 10px clamp(16px, 3vw, 32px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 20px;
+}
+
+.link-item {
+  white-space: nowrap;
+}
+
+.link-key {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.link-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text);
+}
+
+/* Closed = hollow ring, open = filled dot: shape + word, not colour alone. */
+.link-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+}
+.earth-link.is-open .link-dot {
+  background: var(--ghost);
+  border-color: var(--ghost);
+}
+
+/* ------------------------------------------------------------------ */
+/* One Action card                                                    */
+/* ------------------------------------------------------------------ */
+
+.action-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.action-card.attn {
+  border-color: var(--attn-2);
+}
+.action-card.attn-3 {
+  border-color: var(--attn-3);
+}
+.action-card.attn-4 {
+  border-color: var(--attn-4);
+  border-width: 2px;
+}
+
+.action-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.action-card-head .section-label {
+  margin: 0;
+}
+
+.action-card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.button-primary,
+.button-quiet {
+  min-height: var(--touch);
+  min-width: 120px;
+  padding: 0 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.button-primary {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #06222a;
+}
+.button-primary:hover {
+  background: #9be3f1;
+}
+
+.button-quiet {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+}
+.button-quiet:hover {
+  border-color: var(--text-faint);
+}
+
+/* Calm confirmation — no confetti. */
+.action-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  border: 1px solid var(--line-soft);
+  color: var(--text-muted);
+  font-size: 0.94rem;
+}
+.action-result strong {
+  color: var(--text);
 }
 
 .map-area {

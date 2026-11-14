@@ -1,4 +1,5 @@
-// App state: who is signed in, whose data is shown, and the selected body part.
+// App state: who is signed in, whose data is shown, the selected body part,
+// and the One Action log ("Done" / "Not today" per crew member per day).
 // Saved in localStorage so a reload (or a tired astronaut) lands where they left off.
 // Offline-first: no network, and the app still works if storage is blocked.
 //
@@ -7,8 +8,10 @@
 
 import { useSyncExternalStore } from 'react'
 import { BODY_PART_BY_ID } from '../data/bodyParts'
-import type { BodyPartId, CrewMember } from '../types'
+import { formatShipTime } from '../engine/earthLink'
+import type { Action, ActionLogEntry, ActionOutcome, BodyPartId, CrewMember } from '../types'
 import { type ViewMode, canView, findCrew, resolveViewedCrew, viewModeFor, visibleCrew } from './access'
+import { type ActionLog, actionKey, parseActionLog, withEntry, withoutEntry } from './actionLog'
 
 interface StoredState {
   /** Signed-in crew member (prototype: no password). null = start screen. */
@@ -20,6 +23,8 @@ interface StoredState {
 
 /** Bump the version if the shape changes, so old saved state is ignored. */
 const STORAGE_KEY = 'remote-doctor:ui:v2'
+/** The action log is saved separately: it outlives sign-in sessions. */
+const ACTION_LOG_KEY = 'remote-doctor:actions:v1'
 
 const EMPTY: StoredState = { userId: null, crewId: null, selectedPart: null }
 
@@ -42,16 +47,36 @@ function load(): StoredState {
   }
 }
 
+function loadActionLog(): ActionLog {
+  try {
+    const raw = localStorage.getItem(ACTION_LOG_KEY)
+    return raw ? parseActionLog(JSON.parse(raw)) : {}
+  } catch {
+    return {}
+  }
+}
+
 let state: StoredState = load()
+let actionLog: ActionLog = loadActionLog()
 const listeners = new Set<() => void>()
 
-function setState(next: StoredState): void {
-  state = next
+function save(key: string, value: unknown): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    localStorage.setItem(key, JSON.stringify(value))
   } catch {
     // Storage blocked: keep working in memory.
   }
+}
+
+function setState(next: StoredState): void {
+  state = next
+  save(STORAGE_KEY, state)
+  for (const l of listeners) l()
+}
+
+function setActionLog(next: ActionLog): void {
+  actionLog = next
+  save(ACTION_LOG_KEY, actionLog)
   for (const l of listeners) l()
 }
 
@@ -88,6 +113,42 @@ export function selectPart(part: BodyPartId | null): void {
 /** Toggle: selecting the open part again closes it. */
 export function togglePart(part: BodyPartId): void {
   selectPart(state.selectedPart === part ? null : part)
+}
+
+/** The signed-in user, if they may act for this crew member (themself, or anyone in the CMO view). */
+function actorFor(crewId: string): CrewMember | null {
+  const user = findCrew(state.userId)
+  return user && canView(user, crewId) ? user : null
+}
+
+/** Record "Done" / "Not today" for a crew member's One Action on a mission day. */
+export function recordAction(
+  crewId: string,
+  day: number,
+  action: Action,
+  part: BodyPartId | null,
+  outcome: ActionOutcome,
+  shipMinutes: number,
+): void {
+  const actor = actorFor(crewId)
+  if (!actor) return
+  setActionLog(
+    withEntry(actionLog, {
+      crewId,
+      day,
+      outcome,
+      actionTitle: action.title,
+      part,
+      escalationLevel: action.escalationLevel,
+      recordedBy: actor.id,
+      shipTime: formatShipTime(shipMinutes),
+    }),
+  )
+}
+
+/** Undo today's choice. */
+export function clearAction(crewId: string, day: number): void {
+  if (actorFor(crewId)) setActionLog(withoutEntry(actionLog, crewId, day))
 }
 
 // ---------------------------------------------------------------------------
@@ -142,4 +203,14 @@ function getSession(): Session {
 
 export function useSession(): Session {
   return useSyncExternalStore(subscribe, getSession, getSession)
+}
+
+/** The saved One Action choice for a crew member on a day (null = not answered yet). */
+export function useActionEntry(crewId: string, day: number): ActionLogEntry | null {
+  const key = actionKey(crewId, day)
+  return useSyncExternalStore(
+    subscribe,
+    () => actionLog[key] ?? null,
+    () => actionLog[key] ?? null,
+  )
 }

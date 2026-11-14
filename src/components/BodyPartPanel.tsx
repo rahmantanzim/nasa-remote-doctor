@@ -93,26 +93,35 @@ function PartDetail({ result, part, onBack }: { result: EngineResult; part: Body
         <p className="level-reason">{status.escalationReason}</p>
       </section>
 
-      <section className={`action${attnClass(status.escalationLevel)}`} aria-label="What to do">
-        <p className="section-label">What to do</p>
-        <h3 className="action-title">{action.title}</h3>
-        <p className="action-why">{action.why}</p>
-        <ol className="steps">
-          {action.how.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ol>
-        {action.offlineProtocol && action.offlineProtocol.length > 0 && (
-          <div className="offline">
-            <strong>If Earth cannot answer</strong>
-            <ul>
-              {action.offlineProtocol.map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </section>
+{part === result.oneActionPart ? (
+        <section className={`action${attnClass(status.escalationLevel)}`} aria-label="What to do">
+          <p className="section-label">What to do</p>
+          <p>
+            This is today's One Action: <strong>{action.title}</strong>. See the One Action card for the steps.
+          </p>
+        </section>
+      ) : (
+              <section className={`action${attnClass(status.escalationLevel)}`} aria-label="What to do">
+          <p className="section-label">What to do</p>
+          <h3 className="action-title">{action.title}</h3>
+          <p className="action-why">{action.why}</p>
+          <ol className="steps">
+            {action.how.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+          {action.offlineProtocol && action.offlineProtocol.length > 0 && (
+            <div className="offline">
+              <strong>If Earth cannot answer</strong>
+              <ul>
+                {action.offlineProtocol.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
 
       <section>
         <p className="section-label">Landing day</p>

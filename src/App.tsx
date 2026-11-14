@@ -1,10 +1,13 @@
-// App shell. Not signed in → "Who is using this tablet?".
+// App shell. Earth link bar always on top (SPEC.md F6).
+// Not signed in → "Who is using this tablet?".
 // Signed in → Today screen (SPEC.md §10): top bar, Body Map in the centre,
-// detail panel at the side (below on narrow screens).
+// One Action card + detail panel at the side (action first on narrow screens).
 // Who may see whose data is decided by the store (access.ts), not here.
 
 import { useMemo } from 'react'
+import { ActionCard } from './components/ActionCard'
 import { BodyMap } from './components/BodyMap'
+import { EarthLinkBar } from './components/EarthLinkBar'
 import { BodyPartPanel } from './components/BodyPartPanel'
 import { SignIn } from './components/SignIn'
 import { CREW } from './data/crew'
@@ -20,20 +23,23 @@ const DISCLAIMER = 'Prototype for education. Not a medical device. Simulated cre
 function App() {
   const session = useSession()
   return (
-    <div className="app">
-      {session.signedIn ? (
-        <Today
-          user={session.user}
-          isCrewMedicalOfficer={session.viewMode === 'crew-medical-officer'}
-          visibleCrew={session.visibleCrew}
-          viewed={session.viewed}
-          selectedPart={session.selectedPart}
-        />
-      ) : (
-        <SignIn crew={CREW} onSignIn={signIn} />
-      )}
-      <footer className="footer">{DISCLAIMER}</footer>
-    </div>
+    <>
+      <EarthLinkBar mission={MISSION} />
+      <div className="app">
+        {session.signedIn ? (
+          <Today
+            user={session.user}
+            isCrewMedicalOfficer={session.viewMode === 'crew-medical-officer'}
+            visibleCrew={session.visibleCrew}
+            viewed={session.viewed}
+            selectedPart={session.selectedPart}
+          />
+        ) : (
+          <SignIn crew={CREW} onSignIn={signIn} />
+        )}
+        <footer className="footer">{DISCLAIMER}</footer>
+      </div>
+    </>
   )
 }
 
@@ -105,6 +111,8 @@ function Today({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart }
           </div>
           <BodyMap crewName={viewed.name} statuses={result.statuses} selectedPart={selectedPart} onSelect={togglePart} />
         </section>
+
+        <ActionCard result={result} crew={viewed} isSelf={viewed.id === user.id} shipTime={MISSION.shipTime} />
 
         <BodyPartPanel result={result} selectedPart={selectedPart} onSelect={selectPart} />
       </main>

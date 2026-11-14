@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { BODY_PART_ORDER } from './forecast'
-import { PRIORITY, actionFor, rankStatuses } from './actions'
+import { PRIORITY, actionFor, canDefer, rankStatuses } from './actions'
+import { MISSION } from '../data/mission'
 import { engineFor, lucas, maya, sam } from './testCrew'
 
 describe('actions', () => {
@@ -47,5 +48,13 @@ describe('actions', () => {
         expect(`${a.why} ${a.how.join(' ')}`, tag).not.toMatch(/NaN|undefined/)
       }
     }
+  })
+
+  it('urgent (Level 4) actions cannot be put off; others can', () => {
+    expect(canDefer(engineFor(maya).oneAction)).toBe(true)
+    expect(canDefer(engineFor(sam).oneAction)).toBe(true)
+    const spe = engineFor(lucas, { ...MISSION, currentDay: 131 }).oneAction
+    expect(spe.escalationLevel).toBe(4)
+    expect(canDefer(spe)).toBe(false)
   })
 })

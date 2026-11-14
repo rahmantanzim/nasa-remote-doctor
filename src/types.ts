@@ -241,6 +241,25 @@ export interface Action {
   offlineProtocol?: string[]
 }
 
+/** What the astronaut did with today's One Action. */
+export type ActionOutcome = 'done' | 'not-today'
+
+/** One Action choice, saved per crew member per mission day (used by the Earth Report). */
+export interface ActionLogEntry {
+  crewId: string
+  day: number
+  outcome: ActionOutcome
+  /** The action as shown, so the report reads correctly later. */
+  actionTitle: string
+  /** Body part the action came from (null = "keep your routine"). */
+  part: BodyPartId | null
+  escalationLevel: EscalationLevel
+  /** Who pressed the button (the astronaut, or the Crew Medical Officer). */
+  recordedBy: string
+  /** Ship time when it was recorded, "HH:MM". */
+  shipTime: string
+}
+
 export type QueueState = 'queued' | 'sent' | 'replied'
 
 export interface ReportSection {

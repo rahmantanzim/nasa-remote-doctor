@@ -289,3 +289,10 @@ export function chooseOneAction(
   return { action: actionFor(top, s), part: top.part }
 }
 
+/**
+ * Can this action be put off ("Not today")? Level 4 is an urgent protocol:
+ * "act now, do not wait" (SPEC.md F5) — deferring it is not an option.
+ */
+export function canDefer(action: Action): boolean {
+  return action.escalationLevel < 4
+}
