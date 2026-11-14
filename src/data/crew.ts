@@ -43,6 +43,9 @@ export const CREW: CrewMember[] = [
       recentExerciseMinutes: 35,
       // "Recently" = last 12 days. Assumption, tuned for demo.
       recentDays: 12,
+      // Earlier in the mission: a bit short of need, like most ISS crews.
+      // Assumption.
+      usualSleepHours: 6.9,
       // Sleep debt: ISS crews average ~6 h/night (Barger et al., Lancet
       // Neurology 2014). 5.6 h = worse than average. Assumption.
       recentSleepHours: 5.6,
@@ -76,6 +79,7 @@ export const CREW: CrewMember[] = [
       usualExerciseMinutes: 115, // assumption: near target
       recentExerciseMinutes: 110, // assumption: still near target
       recentDays: 12, // assumption, same window as crewmates
+      usualSleepHours: 6.8, // assumption: a bit under need, typical of ISS
       recentSleepHours: 6.6, // assumption: a bit under need, typical of ISS
       thighCuffHoursPerDay: 2, // assumption: some cuff use
       // Outside the storm shelter during the SPE (securing medical stores)
@@ -106,6 +110,7 @@ export const CREW: CrewMember[] = [
       usualExerciseMinutes: 120, // assumption: meets target
       recentExerciseMinutes: 120, // assumption: meets target
       recentDays: 12, // assumption, same window as crewmates
+      usualSleepHours: 7.6, // assumption: close to need
       recentSleepHours: 7.6, // assumption: close to need
       thighCuffHoursPerDay: 4, // assumption: follows SANS countermeasure plan
       shelteredDuringSPE: true, // assumption

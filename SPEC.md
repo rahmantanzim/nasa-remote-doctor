@@ -142,7 +142,7 @@
 | Environment | One-way delay to Earth | Gravity | Radiation dose rate (approx.) |
 |---|---|---|---|
 | Space Station (LEO) | near real-time | ~0 g (microgravity) | ~0.5 mSv/day |
-| Moon base | ~1.3 s | 0.17 g | ~1.0 mSv/day |
+| Moon base | ~1.3 s | 0.17 g | ~1.4 mSv/day (Chang'e-4 LND, Zhang et al. 2020) |
 | Mars transit (default) | 3–22 min (demo: 18 min) | ~0 g | ~1.8 mSv/day |
 | Mars base | 3–22 min | 0.38 g | ~0.7 mSv/day |
 

@@ -33,9 +33,10 @@ export const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     delayMinutes: { min: 1.3 / 60, max: 1.3 / 60, demo: 1.3 / 60 },
     // Lunar surface gravity 1.62 m/s² ≈ 0.17 g. Source: SPEC.md §6.
     gravityG: 0.17,
-    // ~1.0 mSv/day. Source: SPEC.md §6. (Chang'e-4 LND measured
-    // ~1.4 mSv/day on the lunar surface — Zhang et al., 2020. Verify.)
-    radiationMSvPerDay: 1.0,
+    // ~1.4 mSv/day. Source: Chang'e-4 Lunar Lander Neutrons and Dosimetry
+    // (LND) measured ~1.37 mSv/day dose equivalent on the lunar surface
+    // (Zhang et al., Science Advances 2020). SPEC.md §6.
+    radiationMSvPerDay: 1.4,
     // Assumption: relay-satellite passes, 3 windows per day.
     syncWindows: [
       { start: '02:00', durationMinutes: 120 }, // assumption
