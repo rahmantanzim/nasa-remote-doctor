@@ -220,6 +220,8 @@ export interface BodyPartStatus {
   hazard: HazardId
   landingDayForecast: string
   escalationLevel: EscalationLevel
+  /** Why this level, in simple words. */
+  escalationReason: string
 }
 
 // ---------------------------------------------------------------------------
