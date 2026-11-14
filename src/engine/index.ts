@@ -25,6 +25,8 @@ export interface EngineResult {
   ranked: BodyPartStatus[]
   /** Highest escalation level across the body. */
   topLevel: EscalationLevel
+  /** Every body part Steady at Level 1 (One Action = "keep your routine"). */
+  allSteady: boolean
   /** The action for each body part (detail panel). */
   actions: Record<BodyPartId, Action>
   /** Trend chart data for each body part. */
@@ -51,6 +53,7 @@ export function runEngine(
     statuses,
     ranked,
     topLevel: ranked[0].escalationLevel,
+    allSteady: part === null,
     actions: byPart((st) => actionFor(st, signals)),
     series: byPart((st) => trendSeries(st.part, signals)),
     oneAction: action,

@@ -65,6 +65,8 @@ export interface CrewSignals {
   now: ModelState
   /** Body state projected to landing day if this week's habits continue. */
   landing: ModelState
+  /** Day-by-day projection from tomorrow to landing day. */
+  projection: ProjectedDay[]
   /** Last RECENT_DAYS days. */
   recent: WindowStats
   /** The RECENT_DAYS days before that. */
@@ -132,10 +134,17 @@ export function stateDaysAgo(s: Pick<CrewSignals, 'history'>, daysAgo: number): 
   return s.history[i].model
 }
 
+/** One projected day: the expected body state if habits stay the same. */
+export interface ProjectedDay {
+  day: number
+  model: ModelState
+}
+
 /**
- * Project the body forward from the last record to landing day, assuming
- * this week's habits (exercise, sleep, thigh cuffs) stay the same.
+ * Project the body forward day by day from the last record to landing day,
+ * assuming this week's habits (exercise, sleep, thigh cuffs) stay the same.
  * Uses the same physiology models as the simulation, without noise.
+ * Returns one entry per future day (empty if today is landing day).
  */
 export function projectToLanding(
   crew: CrewMember,
@@ -143,14 +152,16 @@ export function projectToLanding(
   mission: Mission,
   environment: Environment,
   habits: Pick<WindowStats, 'exerciseMinutes' | 'sleepHours' | 'thighCuffHours'>,
-): ModelState {
+): ProjectedDay[] {
   const { baseline } = crew
   const unload = P.unloading(environment.gravityG)
   const nights = history.slice(-P.SLEEP_DEBT_WINDOW_NIGHTS).map((r) => r.indicators.sleepHours)
   const exFrac = P.exerciseFraction(habits.exerciseMinutes, baseline.exerciseTargetMinutes)
-  let state = { ...history[history.length - 1].model }
+  const last = history[history.length - 1]
+  let state = { ...last.model }
+  const path: ProjectedDay[] = []
 
-  for (let day = history.length + 1; day <= mission.landingDay; day++) {
+  for (let day = last.day + 1; day <= mission.landingDay; day++) {
     nights.push(habits.sleepHours)
     const sleepDebtHours = P.sleepDebt(nights, baseline.sleepNeedHours)
     const sleepLoad = P.sleepLoad(sleepDebtHours)
@@ -170,8 +181,9 @@ export function projectToLanding(
       immuneStress: P.immuneStress(stress, sleepLoad, unload),
       cumulativeDoseMSv: state.cumulativeDoseMSv + environment.radiationMSvPerDay,
     }
+    path.push({ day, model: state })
   }
-  return state
+  return path
 }
 
 /** Build the signals for one crew member from their history (Day 1 … today). */
@@ -221,6 +233,8 @@ export function buildSignals(
     null,
   )
 
+  const projection = projectToLanding(crew, history, mission, environment, recent)
+
   return {
     crew,
     day,
@@ -231,7 +245,8 @@ export function buildSignals(
     history,
     today,
     now: today.model,
-    landing: projectToLanding(crew, history, mission, environment, recent),
+    landing: projection.length > 0 ? projection[projection.length - 1].model : today.model,
+    projection,
     recent,
     prior,
     expected,

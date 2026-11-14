@@ -218,6 +218,8 @@ export interface BodyPartStatus {
   part: BodyPartId
   status: ForecastStatus
   trend: Trend
+  /** The trend in plain words, e.g. "Sleep debt rising" or "Stable". */
+  trendLabel: string
   reason: string
   hazard: HazardId
   landingDayForecast: string

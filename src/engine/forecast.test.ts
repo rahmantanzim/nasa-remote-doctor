@@ -45,6 +45,15 @@ describe('forecast', () => {
     }
   })
 
+  it('trend labels are plain words: "Stable" or what is moving and which way', () => {
+    const by = Object.fromEntries(engineFor(maya).statuses.map((s) => [s.part, s]))
+    expect(by.sleep.trendLabel).toBe('Sleep debt rising')
+    expect(by.eyes.trendLabel).toBe('Eye signs rising')
+    for (const st of engineFor(sam).statuses) expect(st.trend, st.part).not.toBe('worsening')
+    for (const c of [maya, lucas, sam])
+      for (const st of engineFor(c).statuses) expect(st.trendLabel).not.toMatch(/holding|getting/i)
+  })
+
   it('Sam: every body part is Steady', () => {
     for (const st of engineFor(sam).statuses) expect(st.status, st.part).toBe('steady')
   })

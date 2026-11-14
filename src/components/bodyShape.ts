@@ -93,5 +93,21 @@ export const PLACEMENT: Record<BodyPartId, PartPlacement> = {
   bones: { side: 'right', labelY: 512, anchor: [287, 512] },
 }
 
+/**
+ * Where the Level 2+ attention ring sits on the figure: the centre of the
+ * organ, or a point on the aura/halo for the whole-body layers.
+ */
+export const MARKER: Record<BodyPartId, Pt> = {
+  brain: [260, 52],
+  eyes: [260, 84],
+  heart: [277, 206],
+  immune: [260, 128],
+  metabolism: [260, 282],
+  muscles: [287, 400],
+  bones: [260, 330],
+  sleep: [196, 470],
+  radiation: [306, 34],
+}
+
 /** Radiation halo: the outline scaled out around the body centre. */
 export const HALO_TRANSFORM = `translate(${CX} 320) scale(1.09 1.05) translate(${-CX} -320)`

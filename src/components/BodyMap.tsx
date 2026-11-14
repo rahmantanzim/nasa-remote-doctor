@@ -1,6 +1,8 @@
 // Body Map — the "Ghost Self" (SPEC.md F2).
-// The astronaut projected to landing day. Each body part glows by how much
-// attention it needs, and always carries a text label (never colour alone).
+// The astronaut projected to landing day. Steady parts glow solid and calm;
+// declining parts fade and break up — that part is "fading away" by landing
+// day. A small amber ring marks Level 2+ parts: where to look first.
+// Every part always carries a text label (never colour alone).
 // The labels are the keyboard/screen-reader controls; the SVG shapes are
 // the same targets for mouse and touch.
 
@@ -15,11 +17,12 @@ import {
   LABEL_LEFT_X,
   LABEL_RIGHT_X,
   LABEL_W,
+  MARKER,
   PLACEMENT,
   VIEW_H,
   VIEW_W,
 } from './bodyShape'
-import { FORECAST_WORD, TREND_WORD } from './labels'
+import { FORECAST_WORD } from './labels'
 
 interface Props {
   crewName: string
@@ -28,14 +31,16 @@ interface Props {
   onSelect: (part: BodyPartId) => void
 }
 
-type Tone = 'calm' | 'watch' | 'alert'
-
-/** Visual weight: Level 2+ draws the eye; drifting/declining at Level 1 is "watch". */
-function toneOf(s: BodyPartStatus): Tone {
-  if (s.escalationLevel >= 2) return 'alert'
-  if (s.status === 'drifting' || s.status === 'declining') return 'watch'
-  return 'calm'
+/** Visual state follows the forecast word: steady/recovering solid, drifting in between, declining faded. */
+const TONE: Record<BodyPartStatus['status'], 'solid' | 'drifting' | 'fading'> = {
+  steady: 'solid',
+  recovering: 'solid',
+  drifting: 'drifting',
+  declining: 'fading',
 }
+
+/** Amber attention class for Level 2+ (empty for Level 1). */
+const attnClass = (s: BodyPartStatus) => (s.escalationLevel >= 2 ? ` attn attn-${s.escalationLevel}` : '')
 
 /** The organ shapes. Each is drawn twice: blurred glow + crisp shape. */
 function partShape(part: BodyPartId): ReactNode {
@@ -137,7 +142,7 @@ const DRAW_ORDER: BodyPartId[] = [
 
 function chipLabel(s: BodyPartStatus): string {
   const info = BODY_PART_BY_ID[s.part]
-  return `${info.name}: ${FORECAST_WORD[s.status]}, ${TREND_WORD[s.trend]}. Level ${s.escalationLevel}, ${LEVELS[s.escalationLevel].name}. Show details.`
+  return `${info.name}: ${FORECAST_WORD[s.status]}, ${s.trendLabel}. Level ${s.escalationLevel}, ${LEVELS[s.escalationLevel].name}. Show details.`
 }
 
 export function BodyMap({ crewName, statuses, selectedPart, onSelect }: Props) {
@@ -187,17 +192,29 @@ export function BodyMap({ crewName, statuses, selectedPart, onSelect }: Props) {
         {DRAW_ORDER.filter((p) => p !== 'sleep' && p !== 'radiation').map((part) => (
           <Region key={part} part={part} status={byPart[part]} active={isActive(part)} onSelect={onSelect} onHover={setHover} />
         ))}
+
+        {/* Attention rings (Level 2+), on top of everything */}
+        {statuses
+          .filter((s) => s.escalationLevel >= 2)
+          .map((s) => {
+            const [x, y] = MARKER[s.part]
+            return (
+              <g key={`ring-${s.part}`} className={`ring${attnClass(s)}`} aria-hidden="true">
+                <circle className="ring-pulse" cx={x} cy={y} r={13} />
+                <circle className="ring-core" cx={x} cy={y} r={13} />
+              </g>
+            )
+          })}
       </svg>
 
       <ul className="chips">
         {statuses.map((s) => {
           const { side, labelY } = PLACEMENT[s.part]
-          const tone = toneOf(s)
           return (
             <li key={s.part}>
               <button
                 type="button"
-                className={`chip side-${side} tone-${tone}${hover === s.part ? ' is-hover' : ''}`}
+                className={`chip side-${side}${attnClass(s)}${hover === s.part ? ' is-hover' : ''}`}
                 style={{
                   left: `${((side === 'left' ? LABEL_LEFT_X : LABEL_RIGHT_X) / VIEW_W) * 100}%`,
                   top: `${(labelY / VIEW_H) * 100}%`,
@@ -241,7 +258,7 @@ function Region({
   return (
     // Pointer target only; the matching label button is the keyboard control.
     <g
-      className={`region tone-${toneOf(status)}${layer}${active ? ' is-active' : ''}`}
+      className={`region tone-${TONE[status.status]}${layer}${active ? ' is-active' : ''}`}
       aria-hidden="true"
       onClick={() => onSelect(part)}
       onMouseEnter={() => onHover(part)}

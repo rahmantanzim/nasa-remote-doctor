@@ -19,6 +19,8 @@ export interface PartForecast {
   part: BodyPartId
   hazard: HazardId
   trend: Trend
+  /** The trend in plain words, e.g. "Sleep debt rising" or "Stable". */
+  trendLabel: string
   status: ForecastStatus
   concernNow: Concern
   concernLanding: Concern
@@ -154,7 +156,27 @@ export function statusOf(trend: Trend, concernNow: Concern, concernLanding: Conc
 
 const RECHECK_NOTE = " Today's reading is unusual. Recheck tomorrow — one day alone is not a trend."
 
-type PartView = Omit<PartForecast, 'part' | 'hazard' | 'status'>
+type PartView = Omit<PartForecast, 'part' | 'hazard' | 'status' | 'trendLabel'>
+
+/**
+ * Trend in plain words, per body part: what is actually moving and which way.
+ * Clearer than "holding" or "getting worse" for a tired reader.
+ */
+export const TREND_LABELS: Record<BodyPartId, Record<Exclude<Trend, 'stable'>, string>> = {
+  brain: { worsening: 'Mood falling', improving: 'Mood rising' },
+  eyes: { worsening: 'Eye signs rising', improving: 'Eye signs easing' },
+  heart: { worsening: 'Heart rate rising', improving: 'Heart rate settling' },
+  immune: { worsening: 'Immune strain rising', improving: 'Immune strain easing' },
+  muscles: { worsening: 'Strength falling', improving: 'Strength rising' },
+  bones: { worsening: 'Bone loss speeding up', improving: 'Bone loss slowing' },
+  sleep: { worsening: 'Sleep debt rising', improving: 'Sleep debt falling' },
+  metabolism: { worsening: 'Blood sugar rising', improving: 'Blood sugar falling' },
+  radiation: { worsening: 'Extra dose received', improving: 'Dose back to normal rate' },
+}
+
+export function trendLabel(part: BodyPartId, trend: Trend): string {
+  return trend === 'stable' ? 'Stable' : TREND_LABELS[part][trend]
+}
 
 // ---------------------------------------------------------------------------
 // Body parts
@@ -393,6 +415,7 @@ export function forecastPart(part: BodyPartId, s: CrewSignals): PartForecast {
     // Primary hazard = first listed for the body part (SPEC.md F2 table).
     hazard: BODY_PART_BY_ID[part].hazards[0],
     status: statusOf(view.trend, view.concernNow, view.concernLanding),
+    trendLabel: trendLabel(part, view.trend),
     ...view,
   }
 }

@@ -202,6 +202,7 @@ export function assessBodyParts(s: CrewSignals): BodyPartStatus[] {
       part: f.part,
       status: f.status,
       trend: f.trend,
+      trendLabel: f.trendLabel,
       reason: f.reason,
       hazard: f.hazard,
       landingDayForecast: f.landingDayForecast,

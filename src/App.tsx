@@ -32,7 +32,6 @@ function App() {
         <nav className="crew-switcher" aria-label="Crew member">
           {CREW.map((c) => {
             const r = results[c.id]
-            const attn = r.topLevel >= 2
             return (
               <button
                 key={c.id}
@@ -44,8 +43,8 @@ function App() {
                 <span className="crew-name">{c.name}</span>
                 <span className="crew-meta">
                   {c.role} ·{' '}
-                  <span className={attn ? 'attn' : undefined}>
-                    {r.oneActionPart === null ? 'All steady' : `Level ${r.topLevel} · ${LEVELS[r.topLevel].name}`}
+                  <span className={r.topLevel >= 2 ? `attn attn-${r.topLevel}` : undefined}>
+                    {r.allSteady ? 'All steady' : `Needs: ${LEVELS[r.topLevel].need}`}
                   </span>
                 </span>
               </button>

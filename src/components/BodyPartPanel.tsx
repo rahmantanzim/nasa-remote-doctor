@@ -4,9 +4,12 @@
 import { BODY_PART_BY_ID, HAZARDS } from '../data/bodyParts'
 import { LEVELS } from '../data/levels'
 import type { EngineResult } from '../engine'
-import type { BodyPartId } from '../types'
-import { FORECAST_WORD, TREND_WORD } from './labels'
+import type { BodyPartId, EscalationLevel } from '../types'
+import { FORECAST_WORD } from './labels'
 import { TrendChart } from './TrendChart'
+
+/** Amber attention class for Level 2+ (empty for Level 1). */
+const attnClass = (level: EscalationLevel) => (level >= 2 ? ` attn attn-${level}` : '')
 
 interface Props {
   result: EngineResult
@@ -35,10 +38,9 @@ function Overview({ result, onSelect }: { result: EngineResult; onSelect: (p: Bo
       </div>
       <ol className="ranked">
         {result.ranked.map((s) => {
-          const high = s.escalationLevel >= 2
           return (
             <li key={s.part}>
-              <button type="button" className={`ranked-item${high ? ' level-high' : ''}`} onClick={() => onSelect(s.part)}>
+              <button type="button" className={`ranked-item${attnClass(s.escalationLevel)}`} onClick={() => onSelect(s.part)}>
                 <span className="ranked-name">{BODY_PART_BY_ID[s.part].name}</span>
                 <span className="ranked-level">
                   Level {s.escalationLevel}
@@ -46,7 +48,7 @@ function Overview({ result, onSelect }: { result: EngineResult; onSelect: (p: Bo
                   {LEVELS[s.escalationLevel].name}
                 </span>
                 <span className="ranked-status">
-                  {FORECAST_WORD[s.status]} · {TREND_WORD[s.trend]}
+                  {FORECAST_WORD[s.status]} · {s.trendLabel}
                 </span>
               </button>
             </li>
@@ -63,7 +65,6 @@ function PartDetail({ result, part, onBack }: { result: EngineResult; part: Body
   if (!status) return null
   const action = result.actions[part]
   const level = LEVELS[status.escalationLevel]
-  const high = status.escalationLevel >= 2
   const hazard = HAZARDS[status.hazard]
 
   return (
@@ -80,9 +81,9 @@ function PartDetail({ result, part, onBack }: { result: EngineResult; part: Body
 
       <div className="status-row">
         <span className="pill forecast">
-          <strong>{FORECAST_WORD[status.status]}</strong> · {TREND_WORD[status.trend]}
+          <strong>{FORECAST_WORD[status.status]}</strong> · {status.trendLabel}
         </span>
-        <span className={`pill${high ? ' level-high' : ''}`}>
+        <span className={`pill${attnClass(status.escalationLevel)}`}>
           Level {status.escalationLevel} · {level.name}
         </span>
       </div>
@@ -92,7 +93,7 @@ function PartDetail({ result, part, onBack }: { result: EngineResult; part: Body
         <p className="level-reason">{status.escalationReason}</p>
       </section>
 
-      <section className={`action${high ? ' level-high' : ''}`} aria-label="What to do">
+      <section className={`action${attnClass(status.escalationLevel)}`} aria-label="What to do">
         <p className="section-label">What to do</p>
         <h3 className="action-title">{action.title}</h3>
         <p className="action-why">{action.why}</p>

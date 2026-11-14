@@ -20,12 +20,24 @@
   --text-muted: #8c9cad;
   --text-faint: #5f6f80;
 
-  /* The one accent */
+  /* Accent (cyan) = selected / interactive ONLY. */
   --accent: #7fd8ea;
   --accent-soft: rgb(127 216 234 / 0.16);
-  --accent-glow: rgb(127 216 234 / 0.55);
 
-  /* Chart band = your normal */
+  /* Ghost Self body colour: pale and neutral, so health is shown by
+     solid vs fading — not by hue. */
+  --ghost: #c8dae6;
+  --ghost-soft: rgb(200 218 230 / 0.12);
+
+  /* Amber = attention, used ONLY for Level 2+ (always with text).
+     Level 3 is stronger than Level 2; Level 4 is strongest. */
+  --attn: #f2b45c;
+  --attn-2: rgb(242 180 92 / 0.55);
+  --attn-3: rgb(242 180 92 / 0.85);
+  --attn-4: #ffb347;
+  --attn-bg: rgb(242 180 92 / 0.1);
+
+  /* Chart: band = your normal */
   --band: rgb(140 156 173 / 0.16);
 
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
@@ -178,7 +190,12 @@ button {
 }
 
 .crew-meta .attn {
-  color: var(--accent);
+  color: var(--attn);
+}
+
+.crew-meta .attn-3,
+.crew-meta .attn-4 {
+  font-weight: 600;
 }
 
 /* ------------------------------------------------------------------ */
@@ -262,16 +279,16 @@ button {
 }
 
 .region-glow {
-  fill: var(--accent);
-  stroke: var(--accent);
+  fill: var(--ghost);
+  stroke: var(--ghost);
   filter: url(#glow);
   transition: opacity 600ms ease;
 }
 
 .region-shape {
-  fill: var(--accent-soft);
-  stroke: var(--accent);
-  stroke-width: 1.2;
+  fill: var(--ghost-soft);
+  stroke: var(--ghost);
+  stroke-width: 1.3;
   transition:
     opacity 600ms ease,
     stroke-width 200ms ease;
@@ -283,81 +300,128 @@ button {
   pointer-events: all;
 }
 
-/* Tone = how much the eye should be drawn here (plus a word on the chip). */
-.tone-calm .region-glow {
-  opacity: 0.22;
+/* Ghost Self states (follow the forecast word):
+   solid    — Steady / Recovering: calm, complete glow
+   drifting — in between: softer, outline starting to break
+   fading   — Declining: faint, dotted outline, slow subtle flicker
+              (this part is "fading away" by landing day) */
+.tone-solid .region-glow {
+  opacity: 0.38;
 }
-.tone-calm .region-shape {
-  opacity: 0.55;
-}
-.tone-watch .region-glow {
-  opacity: 0.42;
-}
-.tone-watch .region-shape {
-  opacity: 0.8;
-}
-.tone-alert .region-glow {
-  /* Pulse range per layer, so a whole-body aura never floods the organs. */
-  --pulse-lo: 0.5;
-  --pulse-hi: 0.95;
-  opacity: var(--pulse-hi);
-  animation: pulse 3.6s ease-in-out infinite;
-}
-.tone-alert .region-shape {
-  opacity: 1;
+.tone-solid .region-shape {
+  opacity: 0.85;
 }
 
-.region.is-active .region-shape {
-  stroke-width: 2.4;
-  opacity: 1;
+.tone-drifting .region-glow {
+  opacity: 0.2;
+}
+.tone-drifting .region-shape {
+  opacity: 0.6;
+  stroke-dasharray: 7 3;
 }
 
+.tone-fading .region-glow {
+  opacity: 0.07;
+}
+.tone-fading .region-shape {
+  fill: none;
+  opacity: 0.45;
+  stroke-dasharray: 1.5 4.5;
+  stroke-linecap: round;
+  animation: flicker 7s steps(1, end) infinite;
+}
+
+/* Selected or hovered: cyan (interactive), full strength. */
 .region.is-active .region-glow {
-  opacity: 0.95;
+  fill: var(--accent);
+  stroke: var(--accent);
+  opacity: 0.5;
 }
-
-.layer-sleep.is-active .region-glow {
+.region.is-active .region-shape {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  opacity: 1;
   animation: none;
 }
 
 /* Whole-body layers */
 .layer-sleep .region-glow {
-  fill: var(--accent);
   stroke: none;
   filter: url(#aura);
 }
 .layer-sleep .region-shape {
   fill: none;
-  stroke-dasharray: 2 5;
+}
+.layer-sleep.tone-solid .region-glow {
+  opacity: 0.1;
+}
+.layer-sleep.tone-drifting .region-glow {
+  opacity: 0.05;
+}
+.layer-sleep.tone-fading .region-glow {
+  opacity: 0.02;
+}
+.layer-sleep.is-active .region-glow {
+  opacity: 0.16;
+}
+.layer-sleep.tone-solid .region-shape {
+  stroke-dasharray: 3 4;
 }
 .layer-radiation .region-glow {
   fill: none;
   stroke-width: 3;
 }
+/* The halo is a ring, never a fill — also when selected. */
+.layer-radiation.is-active .region-glow {
+  fill: none;
+  opacity: 0.6;
+}
 .layer-radiation .region-shape {
   fill: none;
-  stroke-dasharray: 1 7;
   stroke-linecap: round;
   stroke-width: 2;
 }
-.layer-sleep.tone-calm .region-glow {
-  opacity: 0.08;
-}
-.layer-sleep.tone-watch .region-glow {
-  opacity: 0.14;
-}
-.layer-sleep.tone-alert .region-glow {
-  --pulse-lo: 0.1;
-  --pulse-hi: 0.26;
-}
-.layer-sleep.is-active .region-glow {
-  opacity: 0.28;
+.layer-radiation.tone-solid .region-shape {
+  stroke-dasharray: 1 7;
 }
 .layer-sleep .region-hit,
 .layer-radiation .region-hit {
   fill: none;
   stroke-width: 16;
   pointer-events: stroke;
+}
+
+/* Attention ring (Level 2+): where to look first. Amber, slow pulse. */
+.ring {
+  pointer-events: none;
+}
+.ring circle {
+  fill: none;
+  stroke: var(--attn);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ring-core {
+  stroke-width: 1.6;
+  opacity: 0.75;
+}
+.ring-pulse {
+  stroke-width: 1.2;
+  animation: ring-pulse 3.2s ease-out infinite;
+}
+.ring.attn-3 .ring-core {
+  stroke-width: 2.4;
+  opacity: 0.95;
+}
+.ring.attn-4 .ring-core {
+  stroke: var(--attn-4);
+  stroke-width: 3.2;
+  opacity: 1;
+}
+.ring.attn-4 .ring-pulse {
+  stroke: var(--attn-4);
+  stroke-width: 2;
+  animation-duration: 1.8s;
 }
 
 .leader {
@@ -376,13 +440,40 @@ button {
   fill: var(--accent);
 }
 
-@keyframes pulse {
+@keyframes ring-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+/* Irregular, subtle dimming — a part that is failing to hold its shape. */
+@keyframes flicker {
   0%,
   100% {
-    opacity: var(--pulse-lo);
+    opacity: 0.45;
   }
-  50% {
-    opacity: var(--pulse-hi);
+  31% {
+    opacity: 0.3;
+  }
+  34% {
+    opacity: 0.45;
+  }
+  62% {
+    opacity: 0.35;
+  }
+  66% {
+    opacity: 0.45;
+  }
+  84% {
+    opacity: 0.28;
+  }
+  86% {
+    opacity: 0.45;
   }
 }
 
@@ -437,13 +528,29 @@ button {
   color: var(--text-muted);
 }
 
-.chip.tone-alert {
-  border-color: rgb(127 216 234 / 0.5);
+.chip.attn {
+  border-color: var(--attn-2);
+}
+.chip.attn-3 {
+  border-color: var(--attn-3);
+  border-width: 1.5px;
+}
+.chip.attn-4 {
+  border-color: var(--attn-4);
+  border-width: 2px;
+  background: var(--attn-bg);
+}
+.chip.attn .chip-status {
+  color: var(--attn);
+  font-weight: 500;
+}
+.chip.attn-4 .chip-status {
+  font-weight: 600;
 }
 
-.chip.tone-alert .chip-status {
-  color: var(--accent);
-  font-weight: 500;
+/* Selected (interactive) wins the border; amber text keeps the level. */
+.chip[aria-pressed='true'] {
+  border-color: var(--accent);
 }
 
 /* Narrow map: chips move under the figure as a grid; leader lines hide. */
@@ -549,9 +656,18 @@ button {
   font-weight: 600;
 }
 
-.pill.level-high {
-  border-color: var(--accent);
-  color: var(--accent);
+.pill.attn {
+  border-color: var(--attn-2);
+  color: var(--attn);
+}
+.pill.attn-3 {
+  border-color: var(--attn-3);
+  font-weight: 500;
+}
+.pill.attn-4 {
+  border-color: var(--attn-4);
+  background: var(--attn-bg);
+  font-weight: 600;
 }
 
 .section-label {
@@ -583,8 +699,15 @@ button {
   gap: 10px;
 }
 
-.action.level-high {
-  border-color: rgb(127 216 234 / 0.5);
+.action.attn {
+  border-color: var(--attn-2);
+}
+.action.attn-3 {
+  border-color: var(--attn-3);
+}
+.action.attn-4 {
+  border-color: var(--attn-4);
+  border-width: 2px;
 }
 
 .action-title {
@@ -662,8 +785,15 @@ button {
   border-color: var(--text-faint);
 }
 
-.ranked-item.level-high {
-  border-color: rgb(127 216 234 / 0.45);
+.ranked-item.attn {
+  border-color: var(--attn-2);
+}
+.ranked-item.attn-3 {
+  border-color: var(--attn-3);
+}
+.ranked-item.attn-4 {
+  border-color: var(--attn-4);
+  background: var(--attn-bg);
 }
 
 .ranked-name {
@@ -682,8 +812,8 @@ button {
   text-align: right;
 }
 
-.ranked-item.level-high .ranked-level {
-  color: var(--accent);
+.ranked-item.attn .ranked-level {
+  color: var(--attn);
   font-weight: 500;
 }
 
@@ -705,7 +835,8 @@ button {
 
 .trend-legend {
   display: flex;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 4px 14px;
   font-size: 0.75rem;
   color: var(--text-faint);
 }
@@ -720,7 +851,16 @@ button {
 
 .legend-line {
   height: 2px;
-  background: var(--accent);
+  background: var(--text);
+}
+
+.legend-line.dashed {
+  background: repeating-linear-gradient(90deg, var(--text) 0 5px, transparent 5px 8px);
+}
+
+.legend-line.dotted {
+  height: 1px;
+  background: repeating-linear-gradient(90deg, var(--text-muted) 0 2px, transparent 2px 5px);
 }
 
 .legend-band {
@@ -734,8 +874,20 @@ button {
   height: 150px;
 }
 
-.trend-chart .recharts-line-curve {
-  stroke: var(--accent);
+/* Chart lines are neutral (cyan is for interaction only). */
+.trend-chart .line-value .recharts-line-curve {
+  stroke: var(--text);
+}
+.trend-chart .line-forecast .recharts-line-curve {
+  stroke: var(--text);
+  opacity: 0.6;
+}
+.trend-chart .line-normal .recharts-line-curve {
+  stroke: var(--text-muted);
+  opacity: 0.8;
+}
+.trend-chart .today-line line {
+  stroke: var(--text-faint);
 }
 
 .trend-chart .recharts-area-area {
