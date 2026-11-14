@@ -1,4 +1,4 @@
-// Seeded, stateless noise for the simulation (SPEC.md §7). No Math.random().
+// Seeded, stateless noise for the simulation (SPEC.md #7). No Math.random().
 //
 // Every draw is a pure function of (seed, day, channel). It keeps no state,
 // so adding a new model or channel never changes the numbers that existing
