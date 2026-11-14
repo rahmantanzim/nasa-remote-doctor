@@ -66,29 +66,14 @@ function Today({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart }
           <nav className="crew-overview" aria-label="Crew Medical Officer view">
             <span className="crew-overview-label">Crew Medical Officer view</span>
             <div className="crew-switcher">
-              {visibleCrew.map((c) => {
-                const r = results[c.id]
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className="crew-button"
-                    aria-pressed={c.id === viewed.id}
-                    onClick={() => selectCrew(c.id)}
-                  >
-                    <span className="crew-name">
-                      {c.name}
-                      {c.id === user.id ? ' (you)' : ''}
-                    </span>
-                    <span className="crew-meta">
-                      {c.role} ·{' '}
-                      <span className={r.topLevel >= 2 ? `attn attn-${r.topLevel}` : undefined}>
-                        {r.allSteady ? 'All steady' : `Needs: ${LEVELS[r.topLevel].need}`}
-                      </span>
-                    </span>
-                  </button>
-                )
-              })}
+              <CrewTab crew={user} label={`Me · ${user.name}`} result={results[user.id]} selected={viewed.id === user.id} />
+              <span className="crew-divider" aria-hidden="true" />
+              <span className="crew-group-label">Crew</span>
+              {visibleCrew
+                .filter((c) => c.id !== user.id)
+                .map((c) => (
+                  <CrewTab key={c.id} crew={c} label={c.name} result={results[c.id]} selected={viewed.id === c.id} />
+                ))}
             </div>
           </nav>
         )}
@@ -124,6 +109,30 @@ function Today({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart }
         <BodyPartPanel result={result} selectedPart={selectedPart} onSelect={selectPart} />
       </main>
     </>
+  )
+}
+
+function CrewTab({
+  crew,
+  label,
+  result,
+  selected,
+}: {
+  crew: CrewMember
+  label: string
+  result: EngineResult
+  selected: boolean
+}) {
+  return (
+    <button type="button" className="crew-button" aria-pressed={selected} onClick={() => selectCrew(crew.id)}>
+      <span className="crew-name">{label}</span>
+      <span className="crew-meta">
+        {crew.role} ·{' '}
+        <span className={result.topLevel >= 2 ? `attn attn-${result.topLevel}` : undefined}>
+          {result.allSteady ? 'All steady' : `Needs: ${LEVELS[result.topLevel].need}`}
+        </span>
+      </span>
+    </button>
   )
 }
 

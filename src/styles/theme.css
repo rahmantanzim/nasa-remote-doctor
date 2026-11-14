@@ -113,7 +113,7 @@ button {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px 28px;
+  gap: 16px 20px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -179,6 +179,22 @@ button {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.crew-divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 4px 6px;
+  background: var(--line);
+}
+
+.crew-group-label {
+  align-self: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-right: 2px;
 }
 
 .crew-overview-label {
@@ -275,7 +291,7 @@ button {
 
 .crew-button {
   min-height: var(--touch);
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
   background: var(--surface);
