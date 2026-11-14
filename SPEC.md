@@ -23,6 +23,7 @@
 - **Primary:** the astronaut (not a doctor, not Mission Control).
 - **Secondary:** the flight surgeon on Earth, who reads reports later (asynchronous).
 - Assume the user is tired, busy, and not a medical expert. Explain everything simply.
+- **Who sees what:** Astronauts see only their own data. The Crew Medical Officer also sees a crew overview. The flight surgeon on Earth sees only the Earth Report.
 
 ## 4. Design principles (non-negotiable)
 
