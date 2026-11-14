@@ -1,3 +1,4 @@
+Always follow SPEC.md for features, scope and build order.
 # MISSION DIRECTIVE: DEEP-SPACE CREW HEALTH ARCHITECTURE
 
 ## 1. IDENTITY & PERSPECTIVE
@@ -28,3 +29,5 @@ Every architectural and design decision MUST account for at least two of the fol
 4. **Pitch-Ready Reasoning:** Whenever we finalize a module, summarize *why* this solves a real NASA human-research gap so I can use it directly in our hackathon presentation.
 
 5. **Hackathon Mode:** We have about 10 hours total. Give 3 options ONLY for big design decisions. For small tasks (setup, bug fixes, styling), just build it directly. Keep the scope small.
+6. **Challenge Alignment:** The official challenge asks for color coding and trend charts. These are ALLOWED if every color comes with a reason and an action, and charts show change over time (not decoration). The official challenge text always wins over the banned list.
+7. **No Temporary Fixes:** Never add a temporary solution, hard-coded value, or hack just to get past a problem. If something is blocked, stop and tell me the real cause and the proper fix. Note: the planned config in src/data/ (crew profiles, mission settings, environments, body parts, guides) is intentional design, not a hack — every value there must have a comment with its source or "assumption".
