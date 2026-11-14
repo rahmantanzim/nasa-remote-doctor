@@ -29,6 +29,7 @@ export const HAZARDS: Record<HazardId, { name: string; short: string }> = {
 export const BODY_PARTS: BodyPartInfo[] = [
   {
     id: 'brain',
+    shortName: 'Brain / mind',
     name: 'Brain / mind',
     whatItDoes: 'Thinks, feels and keeps you focused on the mission.',
     mainRisk: 'Low mood, stress and motion sickness.',
@@ -38,6 +39,7 @@ export const BODY_PARTS: BodyPartInfo[] = [
   },
   {
     id: 'eyes',
+    shortName: 'Eyes',
     name: 'Eyes',
     whatItDoes: 'Let you see — near vision matters for reading and fine work.',
     mainRisk: 'SANS: fluid moves toward the head and can change the eye.',
@@ -47,6 +49,7 @@ export const BODY_PARTS: BodyPartInfo[] = [
   },
   {
     id: 'heart',
+    shortName: 'Heart',
     name: 'Heart & vessels',
     whatItDoes: 'Pumps blood to every part of the body.',
     mainRisk: 'Vessels stiffen; you may feel faint when standing on landing day.',
@@ -56,6 +59,7 @@ export const BODY_PARTS: BodyPartInfo[] = [
   },
   {
     id: 'immune',
+    shortName: 'Immune',
     name: 'Blood / immune',
     whatItDoes: 'Carries oxygen and fights germs.',
     mainRisk: 'Anemia, weaker immunity, and sleeping viruses waking up.',
@@ -65,6 +69,7 @@ export const BODY_PARTS: BodyPartInfo[] = [
   },
   {
     id: 'muscles',
+    shortName: 'Muscles',
     name: 'Muscles',
     whatItDoes: 'Move you and hold you up against gravity.',
     mainRisk: 'Muscle mass and strength loss.',
@@ -74,6 +79,7 @@ export const BODY_PARTS: BodyPartInfo[] = [
   },
   {
     id: 'bones',
+    shortName: 'Bones',
     name: 'Bones',
     whatItDoes: 'Hold up your body and protect your organs.',
     mainRisk: 'Bone density loss, higher fracture risk.',
@@ -83,6 +89,7 @@ export const BODY_PARTS: BodyPartInfo[] = [
   },
   {
     id: 'sleep',
+    shortName: 'Sleep',
     name: 'Sleep (whole body)',
     whatItDoes: 'Repairs the body and resets the mind each night.',
     mainRisk: 'Too little sleep and body-clock drift.',
@@ -92,6 +99,7 @@ export const BODY_PARTS: BodyPartInfo[] = [
   },
   {
     id: 'metabolism',
+    shortName: 'Metabolism',
     name: 'Metabolism',
     whatItDoes: 'Turns food into energy.',
     mainRisk: 'Insulin resistance — blood sugar creeps up.',
@@ -101,6 +109,7 @@ export const BODY_PARTS: BodyPartInfo[] = [
   },
   {
     id: 'radiation',
+    shortName: 'Radiation',
     name: 'Radiation (whole body)',
     whatItDoes: 'Not an organ — the total dose your whole body has received.',
     mainRisk: 'Higher lifetime cancer risk and cataracts.',

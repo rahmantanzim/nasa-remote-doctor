@@ -31,7 +31,7 @@ export interface PartForecast {
 // ---------------------------------------------------------------------------
 
 /** SANS score at this share of symptom onset = "watch". Assumption. */
-const SANS_WATCH_FRACTION = 0.85
+export const SANS_WATCH_FRACTION = 0.85
 /** Change in SANS sign-days (headache + blurry) week over week that counts as a trend. Assumption. */
 const SANS_SIGN_TREND_DAYS = 2
 
@@ -43,7 +43,7 @@ const SLEEP_DEBT_TREND_HOURS = 4
 
 /** Bone loss rate, %/month: 1.0 = low end of CSA unprotected range; 0.7 = partly protected. Assumption on 0.7. */
 const BONE_RATE_HIGH = 1.0
-const BONE_RATE_WATCH = 0.7
+export const BONE_RATE_WATCH = 0.7
 /** Change in bone loss rate (%/month) that counts as a trend. Assumption. */
 const BONE_RATE_TREND = 0.2
 /** Landing-day hip bone loss, %. 6% ≈ a 6-month ISS flight with weak exercise. Assumption. */
@@ -52,7 +52,7 @@ const BONE_LANDING_WATCH_PERCENT = 4.5
 
 /** Strength levels, % of pre-flight. Assumption. */
 const STRENGTH_LOW = 90
-const STRENGTH_WATCH = 95
+export const STRENGTH_WATCH = 95
 export const STRENGTH_LANDING_LOW = 88
 const STRENGTH_LANDING_WATCH = 93
 /** Strength change over 2 weeks that counts as a trend, % points. Assumption. */
@@ -60,7 +60,7 @@ const STRENGTH_TREND = 0.5
 
 /** Resting HR rise over personal normal, bpm (weekly mean). Assumption. */
 export const HR_RISE_HIGH = 10
-const HR_RISE_WATCH = 5
+export const HR_RISE_WATCH = 5
 /** Weekly HR change that counts as a trend, bpm. Assumption (≈2× the noise of a 7-day mean). */
 const HR_TREND = 3
 /** Systolic BP gap from the space-normal, mmHg (weekly mean). Assumption. */
@@ -86,7 +86,7 @@ export const GLUCOSE_ABOVE_NORMAL = 100
  * variation database) ≈ 4–5 mg/dL; the reference change value for a 7-day
  * median is ≈ 7 mg/dL. 8 mg/dL = clearly beyond normal wobble. Assumption.
  */
-const GLUCOSE_RISE_WATCH = 8
+export const GLUCOSE_RISE_WATCH = 8
 /**
  * Weekly glucose change that counts as a trend, mg/dL. With ~4 mg/dL
  * day-to-day SD, the gap between two 7-day means has SD ≈ 2.1 mg/dL;
@@ -98,7 +98,7 @@ const GLUCOSE_TREND = 5
 const MOOD_TREND = 0.5
 /** Mood drop below personal normal (weekly mean), points. Assumption. */
 const MOOD_DROP_HIGH = 1.5
-const MOOD_DROP_WATCH = 0.75
+export const MOOD_DROP_WATCH = 0.75
 /** Stress index thresholds. Assumption. */
 const STRESS_HIGH = 0.7
 const STRESS_WATCH = 0.55

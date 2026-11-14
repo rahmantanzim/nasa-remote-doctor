@@ -201,6 +201,8 @@ export interface ModelState {
 export interface BodyPartInfo {
   id: BodyPartId
   name: string
+  /** Short label for the Body Map. */
+  shortName: string
   /** One simple sentence. */
   whatItDoes: string
   mainRisk: string

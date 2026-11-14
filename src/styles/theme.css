@@ -1,0 +1,764 @@
+/* Remote Doctor — calm "spacecraft cabin" theme (SPEC.md §10).
+ *
+ * Dark, low-glare surfaces for a dim cabin. ONE accent colour (soft cyan).
+ * Meaning never relies on colour alone: every glow has a text label, and
+ * urgency is shown by brightness + slow pulse + words.
+ * Fonts are bundled locally (offline-first — no font CDN).
+ */
+
+:root {
+  /* Surfaces */
+  --bg: #080b10;
+  --bg-raised: #0d1219;
+  --surface: #111821;
+  --surface-2: #16202b;
+  --line: #223041;
+  --line-soft: #1a2532;
+
+  /* Text */
+  --text: #dde6ee;
+  --text-muted: #8c9cad;
+  --text-faint: #5f6f80;
+
+  /* The one accent */
+  --accent: #7fd8ea;
+  --accent-soft: rgb(127 216 234 / 0.16);
+  --accent-glow: rgb(127 216 234 / 0.55);
+
+  /* Chart band = your normal */
+  --band: rgb(140 156 173 / 0.16);
+
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  /* Glove-friendly minimum (SPEC.md §4.6). */
+  --touch: 48px;
+
+  color-scheme: dark;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgb(127 216 234 / 0.05), transparent 70%),
+    var(--bg);
+}
+
+h1,
+h2,
+h3,
+p,
+ol,
+ul {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ */
+/* App frame                                                          */
+/* ------------------------------------------------------------------ */
+
+.app {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px clamp(16px, 3vw, 32px) 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+.brand-env {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mission-day {
+  margin-left: auto;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.mission-day strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Crew switcher */
+.crew-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.crew-button {
+  min-height: var(--touch);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease;
+}
+
+.crew-button:hover {
+  border-color: var(--text-faint);
+}
+
+.crew-button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.crew-name {
+  font-weight: 500;
+}
+
+.crew-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.crew-meta .attn {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Today screen                                                       */
+/* ------------------------------------------------------------------ */
+
+.today {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 1fr);
+  gap: 24px;
+  align-items: start;
+  flex: 1;
+}
+
+@media (max-width: 960px) {
+  .today {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.map-area {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.map-caption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.map-caption .ghost {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.footer {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  text-align: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ------------------------------------------------------------------ */
+/* Body Map ("Ghost Self")                                            */
+/* ------------------------------------------------------------------ */
+
+.bodymap {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  aspect-ratio: 520 / 640;
+}
+
+.bodymap svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.body-outline {
+  fill: rgb(127 216 234 / 0.025);
+  stroke: rgb(221 230 238 / 0.32);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* Regions: a blurred glow copy + a crisp shape. */
+.region {
+  cursor: pointer;
+}
+
+.region-glow {
+  fill: var(--accent);
+  stroke: var(--accent);
+  filter: url(#glow);
+  transition: opacity 600ms ease;
+}
+
+.region-shape {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 1.2;
+  transition:
+    opacity 600ms ease,
+    stroke-width 200ms ease;
+}
+
+.region-hit {
+  fill: transparent;
+  stroke: transparent;
+  pointer-events: all;
+}
+
+/* Tone = how much the eye should be drawn here (plus a word on the chip). */
+.tone-calm .region-glow {
+  opacity: 0.22;
+}
+.tone-calm .region-shape {
+  opacity: 0.55;
+}
+.tone-watch .region-glow {
+  opacity: 0.42;
+}
+.tone-watch .region-shape {
+  opacity: 0.8;
+}
+.tone-alert .region-glow {
+  /* Pulse range per layer, so a whole-body aura never floods the organs. */
+  --pulse-lo: 0.5;
+  --pulse-hi: 0.95;
+  opacity: var(--pulse-hi);
+  animation: pulse 3.6s ease-in-out infinite;
+}
+.tone-alert .region-shape {
+  opacity: 1;
+}
+
+.region.is-active .region-shape {
+  stroke-width: 2.4;
+  opacity: 1;
+}
+
+.region.is-active .region-glow {
+  opacity: 0.95;
+}
+
+.layer-sleep.is-active .region-glow {
+  animation: none;
+}
+
+/* Whole-body layers */
+.layer-sleep .region-glow {
+  fill: var(--accent);
+  stroke: none;
+  filter: url(#aura);
+}
+.layer-sleep .region-shape {
+  fill: none;
+  stroke-dasharray: 2 5;
+}
+.layer-radiation .region-glow {
+  fill: none;
+  stroke-width: 3;
+}
+.layer-radiation .region-shape {
+  fill: none;
+  stroke-dasharray: 1 7;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+.layer-sleep.tone-calm .region-glow {
+  opacity: 0.08;
+}
+.layer-sleep.tone-watch .region-glow {
+  opacity: 0.14;
+}
+.layer-sleep.tone-alert .region-glow {
+  --pulse-lo: 0.1;
+  --pulse-hi: 0.26;
+}
+.layer-sleep.is-active .region-glow {
+  opacity: 0.28;
+}
+.layer-sleep .region-hit,
+.layer-radiation .region-hit {
+  fill: none;
+  stroke-width: 16;
+  pointer-events: stroke;
+}
+
+.leader {
+  stroke: var(--line);
+  stroke-width: 1;
+  fill: none;
+  transition: stroke 200ms ease;
+}
+.leader.is-active {
+  stroke: var(--accent);
+}
+.leader-dot {
+  fill: var(--text-faint);
+}
+.leader-dot.is-active {
+  fill: var(--accent);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: var(--pulse-lo);
+  }
+  50% {
+    opacity: var(--pulse-hi);
+  }
+}
+
+/* Labels (chips) — the accessible controls for each body part. */
+.chips {
+  list-style: none;
+  padding: 0;
+}
+
+.chip {
+  position: absolute;
+  transform: translateY(-50%);
+  width: 27%;
+  min-height: var(--touch);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: rgb(13 18 25 / 0.86);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease;
+}
+
+.chip.side-right {
+  text-align: left;
+}
+
+.chip:hover,
+.chip.is-hover {
+  border-color: var(--text-faint);
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.chip-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.chip-status {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.chip.tone-alert {
+  border-color: rgb(127 216 234 / 0.5);
+}
+
+.chip.tone-alert .chip-status {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Narrow map: chips move under the figure as a grid; leader lines hide. */
+@container (max-width: 560px) {
+  .bodymap {
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .bodymap svg {
+    position: relative;
+    inset: auto;
+    aspect-ratio: 520 / 640;
+    height: auto;
+    max-height: 70vh;
+  }
+  .leader,
+  .leader-dot {
+    display: none;
+  }
+  .chips {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+  .chip {
+    position: static;
+    transform: none;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Detail panel                                                       */
+/* ------------------------------------------------------------------ */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.panel-sub {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  margin-top: 4px;
+}
+
+.back-button {
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.back-button:hover {
+  color: var(--text);
+  border-color: var(--text-faint);
+}
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.88rem;
+}
+
+.pill.forecast strong {
+  font-weight: 600;
+}
+
+.pill.level-high {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.section-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+
+.reason {
+  font-size: 1rem;
+}
+
+.level-reason {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  margin-top: 6px;
+}
+
+/* Action block */
+.action {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  background: var(--bg-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action.level-high {
+  border-color: rgb(127 216 234 / 0.5);
+}
+
+.action-title {
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.action-why {
+  color: var(--text-muted);
+  font-size: 0.94rem;
+}
+
+.steps {
+  padding-left: 1.3em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.offline {
+  border-top: 1px dashed var(--line);
+  padding-top: 10px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.offline ul {
+  padding-left: 1.2em;
+  margin-top: 4px;
+}
+
+.facts {
+  display: grid;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+
+.facts dt {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.facts dd {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+}
+
+/* Ranked overview list */
+.ranked {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ranked-item {
+  width: 100%;
+  min-height: var(--touch);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 12px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-soft);
+  background: var(--bg-raised);
+  cursor: pointer;
+  text-align: left;
+}
+
+.ranked-item:hover {
+  border-color: var(--text-faint);
+}
+
+.ranked-item.level-high {
+  border-color: rgb(127 216 234 / 0.45);
+}
+
+.ranked-name {
+  font-weight: 500;
+}
+
+.ranked-status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.ranked-level {
+  grid-row: span 2;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.ranked-item.level-high .ranked-level {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Trend chart */
+.trend {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trend-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.trend-legend {
+  display: flex;
+  gap: 14px;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.legend-line,
+.legend-band {
+  display: inline-block;
+  width: 14px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.legend-line {
+  height: 2px;
+  background: var(--accent);
+}
+
+.legend-band {
+  height: 10px;
+  background: var(--band);
+  border-radius: 2px;
+}
+
+.trend-chart {
+  width: 100%;
+  height: 150px;
+}
+
+.trend-chart .recharts-line-curve {
+  stroke: var(--accent);
+}
+
+.trend-chart .recharts-area-area {
+  fill: var(--band);
+  fill-opacity: 1;
+}
+
+.trend-chart .recharts-cartesian-axis-tick-value {
+  fill: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.trend-chart .recharts-cartesian-axis-line,
+.trend-chart .recharts-cartesian-axis-tick-line {
+  stroke: var(--line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
