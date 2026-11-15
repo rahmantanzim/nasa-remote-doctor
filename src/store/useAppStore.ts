@@ -1,5 +1,6 @@
 // App state: who is signed in, whose data is shown, the selected body part,
-// and the One Action log ("Done" / "Not today" per crew member per day).
+// the One Action log ("Done" / "Not today" per crew member per day) and the
+// morning check-ins (per crew member per day).
 // Saved in localStorage so a reload (or a tired astronaut) lands where they left off.
 // Offline-first: no network, and the app still works if storage is blocked.
 //
@@ -8,8 +9,9 @@
 
 import { useSyncExternalStore } from 'react'
 import { BODY_PART_BY_ID } from '../data/bodyParts'
+import { type CheckInAnswers, isValidCheckIn } from '../engine/checkIn'
 import { formatShipTime } from '../engine/earthLink'
-import type { Action, ActionLogEntry, ActionOutcome, BodyPartId, CrewMember } from '../types'
+import type { Action, ActionLogEntry, ActionOutcome, BodyPartId, CheckIn, CheckInsByDay, CrewMember } from '../types'
 import { type ViewMode, canView, findCrew, resolveViewedCrew, viewModeFor, visibleCrew } from './access'
 import { type ActionLog, actionKey, parseActionLog, withEntry, withoutEntry } from './actionLog'
 
@@ -25,6 +27,11 @@ interface StoredState {
 const STORAGE_KEY = 'remote-doctor:ui:v2'
 /** The action log is saved separately: it outlives sign-in sessions. */
 const ACTION_LOG_KEY = 'remote-doctor:actions:v1'
+/** Check-ins are saved separately too. */
+const CHECK_INS_KEY = 'remote-doctor:checkins:v1'
+
+/** All check-ins: crew id → mission day → check-in. */
+export type CheckInStore = Readonly<Record<string, CheckInsByDay>>
 
 const EMPTY: StoredState = { userId: null, crewId: null, selectedPart: null }
 
@@ -56,8 +63,28 @@ function loadActionLog(): ActionLog {
   }
 }
 
+function loadCheckIns(): CheckInStore {
+  try {
+    const raw = localStorage.getItem(CHECK_INS_KEY)
+    if (!raw) return {}
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null) return {}
+    const out: Record<string, Record<number, CheckIn>> = {}
+    for (const byDay of Object.values(parsed as Record<string, unknown>)) {
+      if (typeof byDay !== 'object' || byDay === null) continue
+      for (const c of Object.values(byDay as Record<string, unknown>)) {
+        if (isValidCheckIn(c) && findCrew(c.crewId)) (out[c.crewId] ??= {})[c.day] = c
+      }
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
 let state: StoredState = load()
 let actionLog: ActionLog = loadActionLog()
+let checkIns: CheckInStore = loadCheckIns()
 const listeners = new Set<() => void>()
 
 function save(key: string, value: unknown): void {
@@ -71,6 +98,12 @@ function save(key: string, value: unknown): void {
 function setState(next: StoredState): void {
   state = next
   save(STORAGE_KEY, state)
+  for (const l of listeners) l()
+}
+
+function setCheckIns(next: CheckInStore): void {
+  checkIns = next
+  save(CHECK_INS_KEY, checkIns)
   for (const l of listeners) l()
 }
 
@@ -146,6 +179,16 @@ export function recordAction(
   )
 }
 
+/**
+ * Save (or replace) a crew member's morning check-in for a day.
+ * Only the astronaut themself checks in — it is their own report.
+ */
+export function saveCheckIn(crewId: string, day: number, answers: CheckInAnswers, shipMinutes: number): void {
+  if (state.userId !== crewId || !findCrew(crewId)) return
+  const checkIn: CheckIn = { crewId, day, savedAt: formatShipTime(shipMinutes), ...answers }
+  setCheckIns({ ...checkIns, [crewId]: { ...(checkIns[crewId] ?? {}), [day]: checkIn } })
+}
+
 /** Undo today's choice. */
 export function clearAction(crewId: string, day: number): void {
   if (actorFor(crewId)) setActionLog(withoutEntry(actionLog, crewId, day))
@@ -213,4 +256,11 @@ export function useActionEntry(crewId: string, day: number): ActionLogEntry | nu
     () => actionLog[key] ?? null,
     () => actionLog[key] ?? null,
   )
+}
+
+const getCheckIns = () => checkIns
+
+/** All saved check-ins (stable reference until one changes). */
+export function useCheckIns(): CheckInStore {
+  return useSyncExternalStore(subscribe, getCheckIns, getCheckIns)
 }

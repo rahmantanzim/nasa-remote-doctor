@@ -2,7 +2,7 @@
 // Output: their DailyRecord history from Day 1 to the mission's current day.
 
 import { ENVIRONMENTS } from '../data/environments'
-import type { CrewMember, DailyRecord, Environment, Mission, ModelState, Symptoms } from '../types'
+import type { CheckInsByDay, CrewMember, DailyRecord, Environment, Mission, ModelState, Symptoms } from '../types'
 import { chance, gaussian } from './noise'
 import * as P from './physiology'
 
@@ -72,13 +72,19 @@ function initialState(crew: CrewMember): ModelState {
 
 /**
  * Simulate one crew member from Day 1 to `mission.currentDay`.
- * Deterministic: same crew (seed + behaviour) and mission → same history.
+ * Deterministic: same crew (seed + behaviour), mission and check-ins → same history.
  * `environment` defaults to the mission's environment preset.
+ *
+ * Morning check-ins (SPEC F3) replace simulated values and drive the models:
+ *   check-in on day D → last night's sleep = day D sleep;
+ *                       yesterday's exercise + thigh cuffs = day D-1 behaviour;
+ *                       readings + symptoms = day D record (source 'checkin').
  */
 export function simulateCrew(
   crew: CrewMember,
   mission: Mission,
   environment: Environment = ENVIRONMENTS[mission.environment],
+  checkIns: CheckInsByDay = {},
 ): DailyRecord[] {
   const { seed, baseline } = crew
   const unload = P.unloading(environment.gravityG)
@@ -90,13 +96,20 @@ export function simulateCrew(
     const n = (channel: string) => gaussian(seed, day, channel)
     const plan = plannedBehaviour(crew, day, mission.currentDay)
 
-    // Behaviour actually done today (plan + schedule variation).
-    const exerciseMinutes = Math.round(
-      P.clamp(plan.exerciseMinutes + EXERCISE_SD * n('exercise'), 0, MAX_EXERCISE_MINUTES),
-    )
-    const sleepHours = round(P.clamp(plan.sleepHours + SLEEP_SD * n('sleep'), 0, MAX_SLEEP_HOURS), 0.1)
+    const checkIn = checkIns[day]
+    // Tomorrow's check-in reports what was done today (exercise, cuffs).
+    const nextCheckIn = checkIns[day + 1]
+
+    // Behaviour actually done today (check-in answer, else plan + schedule variation).
+    const exerciseMinutes =
+      nextCheckIn?.exerciseMinutesYesterday ??
+      Math.round(P.clamp(plan.exerciseMinutes + EXERCISE_SD * n('exercise'), 0, MAX_EXERCISE_MINUTES))
+    const sleepHours =
+      checkIn?.indicators.sleepHours ??
+      round(P.clamp(plan.sleepHours + SLEEP_SD * n('sleep'), 0, MAX_SLEEP_HOURS), 0.1)
     const thighCuffHours =
-      plan.cuffHours > 0 ? round(P.clamp(plan.cuffHours + CUFF_SD * n('cuff'), 0, MAX_CUFF_HOURS), 0.5) : 0
+      nextCheckIn?.thighCuffHoursYesterday ??
+      (plan.cuffHours > 0 ? round(P.clamp(plan.cuffHours + CUFF_SD * n('cuff'), 0, MAX_CUFF_HOURS), 0.5) : 0)
     nights.push(sleepHours)
 
     // Models.
@@ -132,7 +145,7 @@ export function simulateCrew(
     const zSys = n('sys')
     const zDia = BP_NOISE_CORRELATION * zSys + Math.sqrt(1 - BP_NOISE_CORRELATION ** 2) * n('dia')
     const heart = P.heartMeans(baseline, { deconditioning: cardioDeconditioning, sleepLoad, stress, day, unload })
-    const indicators = {
+    const simulated = {
       heartRate: Math.round(heart.heartRate + HR_SD * n('hr')),
       systolicBP: Math.round(heart.systolicBP + SYSTOLIC_SD * zSys),
       diastolicBP: Math.round(heart.diastolicBP + DIASTOLIC_SD * zDia),
@@ -142,8 +155,10 @@ export function simulateCrew(
       mood: P.clamp(Math.round(P.moodMean(baseline.mood, stress) + MOOD_SD * n('mood')), 1, 5),
     }
 
+    const indicators = checkIn ? { ...checkIn.indicators } : simulated
+
     const odds = P.symptomProbabilities({ sansScore, sleepLoad, immuneStress, day, unload })
-    const symptoms: Symptoms = {
+    const simulatedSymptoms: Symptoms = {
       headache: chance(seed, day, 'sx:headache', odds.headache),
       blurryNearVision: chance(seed, day, 'sx:blurry', odds.blurryNearVision),
       rash: chance(seed, day, 'sx:rash', odds.rash),
@@ -151,6 +166,7 @@ export function simulateCrew(
       nausea: chance(seed, day, 'sx:nausea', odds.nausea),
       fatigue: chance(seed, day, 'sx:fatigue', odds.fatigue),
     }
+    const symptoms = checkIn ? { ...checkIn.symptoms } : simulatedSymptoms
 
     records.push({
       day,
@@ -163,7 +179,7 @@ export function simulateCrew(
       },
       radiationDose,
       model: { ...state },
-      source: 'sim',
+      source: checkIn ? 'checkin' : 'sim',
     })
   }
 

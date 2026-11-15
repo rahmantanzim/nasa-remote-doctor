@@ -7,6 +7,7 @@ import type {
   Action,
   BodyPartId,
   BodyPartStatus,
+  CheckInsByDay,
   CrewMember,
   DailyRecord,
   EscalationLevel,
@@ -61,11 +62,12 @@ export function runEngine(
   }
 }
 
-/** Simulate a crew member's history and run the engine on it. */
+/** Simulate a crew member's history (with their check-ins) and run the engine on it. */
 export function evaluateCrew(
   crew: CrewMember,
   mission: Mission,
   environment: Environment = ENVIRONMENTS[mission.environment],
+  checkIns: CheckInsByDay = {},
 ): EngineResult {
-  return runEngine(crew, simulateCrew(crew, mission, environment), mission, environment)
+  return runEngine(crew, simulateCrew(crew, mission, environment, checkIns), mission, environment)
 }

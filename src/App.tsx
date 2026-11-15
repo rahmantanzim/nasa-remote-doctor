@@ -9,13 +9,24 @@ import { ActionCard } from './components/ActionCard'
 import { BodyMap } from './components/BodyMap'
 import { EarthLinkBar } from './components/EarthLinkBar'
 import { BodyPartPanel } from './components/BodyPartPanel'
+import { CheckInStrip } from './components/CheckInStrip'
 import { SignIn } from './components/SignIn'
 import { CREW } from './data/crew'
 import { ENVIRONMENTS } from './data/environments'
 import { LEVELS } from './data/levels'
 import { MISSION } from './data/mission'
 import { type EngineResult, evaluateCrew } from './engine'
-import { selectCrew, selectPart, signIn, switchUser, togglePart, useSession } from './store/useAppStore'
+import { shipMinutesNow } from './store/shipClock'
+import {
+  saveCheckIn,
+  selectCrew,
+  selectPart,
+  signIn,
+  switchUser,
+  togglePart,
+  useCheckIns,
+  useSession,
+} from './store/useAppStore'
 import type { CrewMember } from './types'
 
 const DISCLAIMER = 'Prototype for education. Not a medical device. Simulated crew data.'
@@ -52,13 +63,18 @@ interface TodayProps {
 }
 
 function Today({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart }: TodayProps) {
-  // Only the crew this user may see is ever evaluated.
+  const checkIns = useCheckIns()
+  // Only the crew this user may see is ever evaluated (with their check-ins).
   const results = useMemo(
-    () => Object.fromEntries(visibleCrew.map((c) => [c.id, evaluateCrew(c, MISSION)])) as Record<string, EngineResult>,
-    [visibleCrew],
+    () =>
+      Object.fromEntries(
+        visibleCrew.map((c) => [c.id, evaluateCrew(c, MISSION, undefined, checkIns[c.id])]),
+      ) as Record<string, EngineResult>,
+    [visibleCrew, checkIns],
   )
   const result = results[viewed.id]
   const { day, landingDay, daysToLanding } = result.signals
+  const isSelf = viewed.id === user.id
 
   return (
     <>
@@ -112,7 +128,16 @@ function Today({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart }
           <BodyMap crewName={viewed.name} statuses={result.statuses} selectedPart={selectedPart} onSelect={togglePart} />
         </section>
 
-        <ActionCard result={result} crew={viewed} isSelf={viewed.id === user.id} shipTime={MISSION.shipTime} />
+        <CheckInStrip
+          crew={viewed}
+          isSelf={isSelf}
+          day={day}
+          history={result.signals.history}
+          existing={checkIns[viewed.id]?.[day]}
+          onSave={(answers) => saveCheckIn(viewed.id, day, answers, shipMinutesNow(MISSION.shipTime))}
+        />
+
+        <ActionCard result={result} crew={viewed} isSelf={isSelf} shipTime={MISSION.shipTime} />
 
         <BodyPartPanel result={result} selectedPart={selectedPart} onSelect={selectPart} />
       </main>

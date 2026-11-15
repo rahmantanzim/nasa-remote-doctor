@@ -241,6 +241,27 @@ export interface Action {
   offlineProtocol?: string[]
 }
 
+/**
+ * Morning check-in answers for one crew member on one mission day (SPEC F3).
+ * They replace the simulated values for that day and feed the body models.
+ */
+export interface CheckIn {
+  crewId: string
+  day: number
+  /** Today's readings (sleepHours = last night). */
+  indicators: Indicators
+  symptoms: Symptoms
+  /** Exercise done yesterday, minutes. */
+  exerciseMinutesYesterday: number
+  /** Thigh cuffs worn yesterday, hours. */
+  thighCuffHoursYesterday: number
+  /** Ship time when saved, "HH:MM". */
+  savedAt: string
+}
+
+/** Check-ins for one crew member, keyed by mission day. */
+export type CheckInsByDay = Readonly<Record<number, CheckIn>>
+
 /** What the astronaut did with today's One Action. */
 export type ActionOutcome = 'done' | 'not-today'
 
