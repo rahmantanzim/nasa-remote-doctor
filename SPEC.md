@@ -145,7 +145,7 @@
 
 ### Tier 3 — slides only (do NOT build)
 - Camera images / ultrasound input.
-- Real wearable sensors (ARCHeR wrist device, Astroskin smart shirt).
+- Real wearable sensors and devices (for example Astroskin, ARCHeR, Tempus Pro) instead of simulated values.
 - Full multi-patient doctor portal.
 - Heavy gamification.
 
@@ -285,9 +285,8 @@ Status: steps 1–8 done, plus roles, offline install (PWA), polish and docs.
 - Official challenge page (NASA Space Apps 2026): Create Health Monitoring Software for Astronauts on Space Missions.
 - NASA HRP — 5 Hazards of Human Spaceflight: https://www.nasa.gov/hrp/hazards
 - NASA HRP — Risks of Human Spaceflight: https://www.nasa.gov/hrp/risks
-- NASA HRP — Ongoing HRP Research in Space (ARCHeR, Thigh Cuff, Brain Fluid Pressure, Standard Measures, Tempus Pro, Zero T2).
+- NASA HRP — Ongoing HRP Research in Space: Thigh Cuff study.
 - CSA — Monitoring radiation for astronaut health (CANS, ~30% neutron radiation on ISS).
-- CSA — Canadian Healthcare in Deep Space (report).
 - Zhang et al., Science Advances 2020 — Chang'e-4 lunar surface radiation (~1.4 mSv/day).
 - Norsk et al., J Physiol 2015 — 24-h blood pressure on the ISS (~8 mmHg lower).
 - CSA — Why do we conduct science experiments in space? (body effects infographic, bone loss up to 1.5% per month).
