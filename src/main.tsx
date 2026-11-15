@@ -1,3 +1,4 @@
+// AI disclosure: this codebase was written with help from Claude Code, directed and reviewed by the author. See README.
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 // Fonts bundled locally — offline-first, no font CDN.

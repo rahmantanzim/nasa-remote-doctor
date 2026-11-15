@@ -98,7 +98,7 @@ Built with help from AI tools: Claude (planning, research, specification) and Cl
 
 ## Next steps
 
-- Real wearable sensors (for example Astroskin, ARCHeR) instead of simulated values.
+- Real wearable sensors and devices (for example Astroskin, ARCHeR, Tempus Pro) instead of simulated values.
 - Camera and ultrasound input (for example eye images for SANS).
 - A web portal for the flight surgeon on Earth.
 - Syncing between crew tablets.
@@ -107,10 +107,9 @@ Built with help from AI tools: Claude (planning, research, specification) and Cl
 
 - NASA Human Research Program — 5 Hazards of Human Spaceflight: https://www.nasa.gov/hrp/hazards
 - NASA Human Research Program — Risks of Human Spaceflight: https://www.nasa.gov/hrp/risks
-- NASA Human Research Program — Ongoing HRP Research in Space (ARCHeR, Thigh Cuff, Brain Fluid Pressure, Standard Measures)
+- NASA Human Research Program — Ongoing HRP Research in Space: Thigh Cuff study
 - Canadian Space Agency — Monitoring radiation for astronaut health
 - Canadian Space Agency — Why do we conduct science experiments in space?
-- Canadian Space Agency — Canadian Healthcare in Deep Space (report)
 - Zhang et al., *Science Advances* 2020 — First measurements of the radiation dose on the lunar surface (Chang'e-4)
 - Norsk et al., *Journal of Physiology* 2015 — Fluid shifts, vasodilatation and ambulatory blood pressure reduction during long-duration spaceflight (ISS)
 

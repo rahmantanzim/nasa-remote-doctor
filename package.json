@@ -1,5 +1,6 @@
 {
   "name": "remote-doctor",
+  "description": "Remote Doctor - astronaut self-health app (NASA Space Apps 2026). Built with help from AI tools: Claude and Claude Code.",
   "private": true,
   "version": "0.0.0",
   "type": "module",
