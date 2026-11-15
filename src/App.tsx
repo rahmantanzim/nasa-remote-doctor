@@ -19,6 +19,7 @@ import { LEVELS } from './data/levels'
 import { MISSION } from './data/mission'
 import { type EngineResult, evaluateCrew } from './engine'
 import { timeOfDay } from './engine/earthLink'
+import { useOfflineReady } from './offline'
 import { missionNow, useMissionDay } from './store/shipClock'
 import {
   type AppView,
@@ -40,6 +41,7 @@ const DISCLAIMER = 'Prototype for education. Not a medical device. Simulated cre
 
 function App() {
   const session = useSession()
+  const offlineReady = useOfflineReady()
   const reports = useVisibleReports()
   const day = useMissionDay()
   // The mission follows the ship clock's day (capped at landing day).
@@ -62,7 +64,10 @@ function App() {
         ) : (
           <SignIn crew={CREW} onSignIn={signIn} />
         )}
-        <footer className="footer">{DISCLAIMER}</footer>
+        <footer className="footer">
+          {DISCLAIMER}
+          {offlineReady && <span className="offline-ready"> · Works offline</span>}
+        </footer>
       </div>
     </>
   )
