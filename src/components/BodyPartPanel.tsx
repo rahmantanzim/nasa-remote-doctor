@@ -5,7 +5,7 @@ import { BODY_PART_BY_ID, HAZARDS } from '../data/bodyParts'
 import { LEVELS } from '../data/levels'
 import type { EngineResult } from '../engine'
 import type { BodyPartId, EscalationLevel } from '../types'
-import { FORECAST_WORD } from './labels'
+import { FORECAST_WORD } from '../data/words'
 import { TrendChart } from './TrendChart'
 
 /** Amber attention class for Level 2+ (empty for Level 1). */

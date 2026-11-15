@@ -6,7 +6,8 @@ import { LEVELS } from '../data/levels'
 import type { EngineResult } from '../engine'
 import { canDefer } from '../engine/actions'
 import { clearAction, recordAction, useActionEntry } from '../store/useAppStore'
-import { shipMinutesNow } from '../store/shipClock'
+import { missionNow } from '../store/shipClock'
+import { timeOfDay } from '../engine/earthLink'
 import type { CrewMember } from '../types'
 import { CREW } from '../data/crew'
 
@@ -16,17 +17,16 @@ interface Props {
   crew: CrewMember
   /** True when the signed-in user is looking at their own card. */
   isSelf: boolean
-  shipTime: string
 }
 
-export function ActionCard({ result, crew, isSelf, shipTime }: Props) {
+export function ActionCard({ result, crew, isSelf }: Props) {
   const { oneAction: action, oneActionPart: part } = result
   const day = result.signals.day
   const entry = useActionEntry(crew.id, day)
   const level = action.escalationLevel
   const attn = level >= 2 ? ` attn attn-${level}` : ''
   const record = (outcome: 'done' | 'not-today') =>
-    recordAction(crew.id, day, action, part, outcome, shipMinutesNow(shipTime))
+    recordAction(crew.id, day, action, part, outcome, timeOfDay(missionNow()))
   const recorder = entry && entry.recordedBy !== crew.id ? CREW.find((c) => c.id === entry.recordedBy)?.name : null
 
   return (

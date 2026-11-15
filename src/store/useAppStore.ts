@@ -1,6 +1,7 @@
 // App state: who is signed in, whose data is shown, the selected body part,
 // the One Action log ("Done" / "Not today" per crew member per day) and the
-// morning check-ins (per crew member per day).
+// morning check-ins (per crew member per day), the Earth report queue, and
+// which view is open (Today / Earth Report).
 // Saved in localStorage so a reload (or a tired astronaut) lands where they left off.
 // Offline-first: no network, and the app still works if storage is blocked.
 //
@@ -11,7 +12,18 @@ import { useSyncExternalStore } from 'react'
 import { BODY_PART_BY_ID } from '../data/bodyParts'
 import { type CheckInAnswers, isValidCheckIn } from '../engine/checkIn'
 import { formatShipTime } from '../engine/earthLink'
-import type { Action, ActionLogEntry, ActionOutcome, BodyPartId, CheckIn, CheckInsByDay, CrewMember } from '../types'
+import { enqueue, isValidReport, reportsVisibleTo } from '../reports/earthQueue'
+import type {
+  Action,
+  ActionLogEntry,
+  ActionOutcome,
+  BodyPartId,
+  CheckIn,
+  CheckInsByDay,
+  CrewMember,
+  EarthReport,
+} from '../types'
+import { resetMissionClock } from './shipClock'
 import { type ViewMode, canView, findCrew, resolveViewedCrew, viewModeFor, visibleCrew } from './access'
 import { type ActionLog, actionKey, parseActionLog, withEntry, withoutEntry } from './actionLog'
 
@@ -21,7 +33,11 @@ interface StoredState {
   /** Crew member whose data is shown (only changeable in the CMO view). */
   crewId: string | null
   selectedPart: BodyPartId | null
+  /** Main screen: 'today' (Body Map) or 'report' (Earth Report). */
+  view: AppView
 }
+
+export type AppView = 'today' | 'report'
 
 /** Bump the version if the shape changes, so old saved state is ignored. */
 const STORAGE_KEY = 'remote-doctor:ui:v2'
@@ -29,11 +45,13 @@ const STORAGE_KEY = 'remote-doctor:ui:v2'
 const ACTION_LOG_KEY = 'remote-doctor:actions:v1'
 /** Check-ins are saved separately too. */
 const CHECK_INS_KEY = 'remote-doctor:checkins:v1'
+/** Earth report queue (snapshots of what was sent). */
+const REPORTS_KEY = 'remote-doctor:reports:v1'
 
 /** All check-ins: crew id → mission day → check-in. */
 export type CheckInStore = Readonly<Record<string, CheckInsByDay>>
 
-const EMPTY: StoredState = { userId: null, crewId: null, selectedPart: null }
+const EMPTY: StoredState = { userId: null, crewId: null, selectedPart: null, view: 'today' }
 
 const isPartId = (x: unknown): x is BodyPartId => typeof x === 'string' && x in BODY_PART_BY_ID
 
@@ -43,11 +61,16 @@ function load(): StoredState {
     if (!raw) return EMPTY
     const parsed: unknown = JSON.parse(raw)
     if (typeof parsed !== 'object' || parsed === null) return EMPTY
-    const { userId, crewId, selectedPart } = parsed as Record<string, unknown>
+    const { userId, crewId, selectedPart, view } = parsed as Record<string, unknown>
     const user = typeof userId === 'string' ? findCrew(userId) : null
     if (!user) return EMPTY
     const viewed = resolveViewedCrew(user, typeof crewId === 'string' ? crewId : null)
-    return { userId: user.id, crewId: viewed.id, selectedPart: isPartId(selectedPart) ? selectedPart : null }
+    return {
+      userId: user.id,
+      crewId: viewed.id,
+      selectedPart: isPartId(selectedPart) ? selectedPart : null,
+      view: view === 'report' ? 'report' : 'today',
+    }
   } catch {
     // Storage blocked or corrupt: start at the sign-in screen.
     return EMPTY
@@ -82,7 +105,18 @@ function loadCheckIns(): CheckInStore {
   }
 }
 
+function loadReports(): EarthReport[] {
+  try {
+    const raw = localStorage.getItem(REPORTS_KEY)
+    const parsed: unknown = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.filter((r): r is EarthReport => isValidReport(r) && !!findCrew(r.crewId)) : []
+  } catch {
+    return []
+  }
+}
+
 let state: StoredState = load()
+let reports: EarthReport[] = loadReports()
 let actionLog: ActionLog = loadActionLog()
 let checkIns: CheckInStore = loadCheckIns()
 const listeners = new Set<() => void>()
@@ -98,6 +132,12 @@ function save(key: string, value: unknown): void {
 function setState(next: StoredState): void {
   state = next
   save(STORAGE_KEY, state)
+  for (const l of listeners) l()
+}
+
+function setReports(next: EarthReport[]): void {
+  reports = next
+  save(REPORTS_KEY, reports)
   for (const l of listeners) l()
 }
 
@@ -125,7 +165,7 @@ function subscribe(listener: () => void): () => void {
 /** "Who is using this tablet?" — sign in as a crew member; start on your own data. */
 export function signIn(userId: string): void {
   const user = findCrew(userId)
-  if (user) setState({ userId: user.id, crewId: user.id, selectedPart: null })
+  if (user) setState({ userId: user.id, crewId: user.id, selectedPart: null, view: 'today' })
 }
 
 /** Back to the start screen. Nothing of the previous user stays selected. */
@@ -187,6 +227,28 @@ export function saveCheckIn(crewId: string, day: number, answers: CheckInAnswers
   if (state.userId !== crewId || !findCrew(crewId)) return
   const checkIn: CheckIn = { crewId, day, savedAt: formatShipTime(shipMinutes), ...answers }
   setCheckIns({ ...checkIns, [crewId]: { ...(checkIns[crewId] ?? {}), [day]: checkIn } })
+}
+
+/** Switch the main screen between Today and Earth Report. */
+export function setView(view: AppView): void {
+  setState({ ...state, view })
+}
+
+/** Put a report in the Earth queue — only for crew this user may see. */
+export function queueReport(report: EarthReport): void {
+  if (actorFor(report.crewId)) setReports(enqueue(reports, report, report.queuedAt))
+}
+
+/**
+ * Demo control: clear all demo data (check-ins, One Action answers, reports)
+ * and put the mission clock back to the start. The user stays signed in.
+ */
+export function resetDemo(): void {
+  setCheckIns({})
+  setActionLog({})
+  setReports([])
+  setState({ ...state, selectedPart: null, view: 'today' })
+  resetMissionClock()
 }
 
 /** Undo today's choice. */
@@ -263,4 +325,38 @@ const getCheckIns = () => checkIns
 /** All saved check-ins (stable reference until one changes). */
 export function useCheckIns(): CheckInStore {
   return useSyncExternalStore(subscribe, getCheckIns, getCheckIns)
+}
+
+// Visible reports, cached per (reports, user) so React sees a stable array.
+let visibleReportsFor: { reports: EarthReport[]; userId: string | null } | null = null
+let visibleReportsCache: EarthReport[] = []
+
+function getVisibleReports(): EarthReport[] {
+  if (visibleReportsFor?.reports !== reports || visibleReportsFor.userId !== state.userId) {
+    const user = findCrew(state.userId)
+    visibleReportsCache = user ? reportsVisibleTo(user, reports) : []
+    visibleReportsFor = { reports, userId: state.userId }
+  }
+  return visibleReportsCache
+}
+
+/** Reports the signed-in user may see (SPEC §3: own reports; CMO: all crew). */
+export function useVisibleReports(): EarthReport[] {
+  return useSyncExternalStore(subscribe, getVisibleReports, getVisibleReports)
+}
+
+/** Current view (Today / Earth Report). */
+export function useView(): AppView {
+  return useSyncExternalStore(
+    subscribe,
+    () => state.view,
+    () => state.view,
+  )
+}
+
+const getActionLog = () => actionLog
+
+/** The whole One Action log (stable reference until it changes). */
+export function useActionLog(): ActionLog {
+  return useSyncExternalStore(subscribe, getActionLog, getActionLog)
 }

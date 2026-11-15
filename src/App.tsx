@@ -1,49 +1,63 @@
 // App shell. Earth link bar always on top (SPEC.md F6).
 // Not signed in → "Who is using this tablet?".
-// Signed in → Today screen (SPEC.md §10): top bar, Body Map in the centre,
-// One Action card + detail panel at the side (action first on narrow screens).
+// Signed in → top bar (view toggle, crew tabs for the CMO, mission day) and
+//   Today:        Body Map + check-in + One Action + detail panel (SPEC §10)
+//   Earth Report: report preview, Earth queue, replies (SPEC F7).
 // Who may see whose data is decided by the store (access.ts), not here.
 
 import { useMemo } from 'react'
 import { ActionCard } from './components/ActionCard'
 import { BodyMap } from './components/BodyMap'
-import { EarthLinkBar } from './components/EarthLinkBar'
 import { BodyPartPanel } from './components/BodyPartPanel'
 import { CheckInStrip } from './components/CheckInStrip'
+import { EarthLinkBar } from './components/EarthLinkBar'
+import { ReportView } from './components/ReportView'
 import { SignIn } from './components/SignIn'
 import { CREW } from './data/crew'
 import { ENVIRONMENTS } from './data/environments'
 import { LEVELS } from './data/levels'
 import { MISSION } from './data/mission'
 import { type EngineResult, evaluateCrew } from './engine'
-import { shipMinutesNow } from './store/shipClock'
+import { timeOfDay } from './engine/earthLink'
+import { missionNow, useMissionDay } from './store/shipClock'
 import {
+  type AppView,
   saveCheckIn,
   selectCrew,
   selectPart,
+  setView,
   signIn,
   switchUser,
   togglePart,
   useCheckIns,
   useSession,
+  useView,
+  useVisibleReports,
 } from './store/useAppStore'
-import type { CrewMember } from './types'
+import type { CrewMember, EarthReport, Mission } from './types'
 
 const DISCLAIMER = 'Prototype for education. Not a medical device. Simulated crew data.'
 
 function App() {
   const session = useSession()
+  const reports = useVisibleReports()
+  const day = useMissionDay()
+  // The mission follows the ship clock's day (capped at landing day).
+  const mission = useMemo<Mission>(() => ({ ...MISSION, currentDay: Math.min(day, MISSION.landingDay) }), [day])
+
   return (
     <>
-      <EarthLinkBar mission={MISSION} />
+      <EarthLinkBar mission={mission} reports={reports} />
       <div className="app">
         {session.signedIn ? (
-          <Today
+          <Main
             user={session.user}
             isCrewMedicalOfficer={session.viewMode === 'crew-medical-officer'}
             visibleCrew={session.visibleCrew}
             viewed={session.viewed}
             selectedPart={session.selectedPart}
+            mission={mission}
+            reports={reports}
           />
         ) : (
           <SignIn crew={CREW} onSignIn={signIn} />
@@ -54,23 +68,31 @@ function App() {
   )
 }
 
-interface TodayProps {
+interface MainProps {
   user: CrewMember
   isCrewMedicalOfficer: boolean
   visibleCrew: CrewMember[]
   viewed: CrewMember
   selectedPart: Parameters<typeof selectPart>[0]
+  mission: Mission
+  reports: EarthReport[]
 }
 
-function Today({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart }: TodayProps) {
+const VIEWS: { id: AppView; label: string }[] = [
+  { id: 'today', label: 'Today' },
+  { id: 'report', label: 'Earth Report' },
+]
+
+function Main({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart, mission, reports }: MainProps) {
+  const view = useView()
   const checkIns = useCheckIns()
   // Only the crew this user may see is ever evaluated (with their check-ins).
   const results = useMemo(
     () =>
       Object.fromEntries(
-        visibleCrew.map((c) => [c.id, evaluateCrew(c, MISSION, undefined, checkIns[c.id])]),
+        visibleCrew.map((c) => [c.id, evaluateCrew(c, mission, undefined, checkIns[c.id])]),
       ) as Record<string, EngineResult>,
-    [visibleCrew, checkIns],
+    [visibleCrew, checkIns, mission],
   )
   const result = results[viewed.id]
   const { day, landingDay, daysToLanding } = result.signals
@@ -81,7 +103,15 @@ function Today({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart }
       <header className="topbar">
         <div className="brand">
           <span className="brand-name">Remote Doctor</span>
-          <span className="brand-env">{ENVIRONMENTS[MISSION.environment].name}</span>
+          <span className="brand-env">{ENVIRONMENTS[mission.environment].name}</span>
+        </div>
+
+        <div className="segmented view-toggle" role="radiogroup" aria-label="View">
+          {VIEWS.map((v) => (
+            <button key={v.id} type="button" role="radio" aria-checked={view === v.id} onClick={() => setView(v.id)}>
+              {v.label}
+            </button>
+          ))}
         </div>
 
         {isCrewMedicalOfficer && (
@@ -116,31 +146,42 @@ function Today({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart }
         </div>
       </header>
 
-      <main className="today">
-        <section className="map-area" aria-label="Body map">
-          <div className="map-caption">
-            <span>
-              <span className="ghost">Ghost Self</span> · {viewed.id === user.id ? 'You' : viewed.name} on landing day
-              (Day {landingDay}), if habits stay the same
-            </span>
-            <span>Simulated crew data</span>
-          </div>
-          <BodyMap crewName={viewed.name} statuses={result.statuses} selectedPart={selectedPart} onSelect={togglePart} />
-        </section>
-
-        <CheckInStrip
+      {view === 'report' ? (
+        <ReportView
           crew={viewed}
           isSelf={isSelf}
-          day={day}
-          history={result.signals.history}
-          existing={checkIns[viewed.id]?.[day]}
-          onSave={(answers) => saveCheckIn(viewed.id, day, answers, shipMinutesNow(MISSION.shipTime))}
+          result={result}
+          checkIns={checkIns[viewed.id] ?? {}}
+          mission={mission}
+          reports={reports}
         />
+      ) : (
+        <main className="today">
+          <section className="map-area" aria-label="Body map">
+            <div className="map-caption">
+              <span>
+                <span className="ghost">Ghost Self</span> · {isSelf ? 'You' : viewed.name} on landing day (Day{' '}
+                {landingDay}), if habits stay the same
+              </span>
+              <span>Simulated crew data</span>
+            </div>
+            <BodyMap crewName={viewed.name} statuses={result.statuses} selectedPart={selectedPart} onSelect={togglePart} />
+          </section>
 
-        <ActionCard result={result} crew={viewed} isSelf={isSelf} shipTime={MISSION.shipTime} />
+          <CheckInStrip
+            crew={viewed}
+            isSelf={isSelf}
+            day={day}
+            history={result.signals.history}
+            existing={checkIns[viewed.id]?.[day]}
+            onSave={(answers) => saveCheckIn(viewed.id, day, answers, timeOfDay(missionNow()))}
+          />
 
-        <BodyPartPanel result={result} selectedPart={selectedPart} onSelect={selectPart} />
-      </main>
+          <ActionCard result={result} crew={viewed} isSelf={isSelf} />
+
+          <BodyPartPanel result={result} selectedPart={selectedPart} onSelect={selectPart} />
+        </main>
+      )}
     </>
   )
 }

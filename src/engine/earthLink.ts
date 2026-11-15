@@ -86,3 +86,25 @@ export function formatDelay(delayMinutes: number): string {
   if (delayMinutes < 1) return `${(delayMinutes * 60).toFixed(1)} s`
   return `${Math.round(delayMinutes)} min`
 }
+
+// ---------------------------------------------------------------------------
+// Mission time: minutes since Day 1, 00:00 ship time. Lets the queue reason
+// across midnight and across days.
+// ---------------------------------------------------------------------------
+
+export const missionTime = (day: number, minutesOfDay: number): number => (day - 1) * MINUTES_PER_DAY + minutesOfDay
+
+export const dayOfMission = (t: number): number => Math.floor(t / MINUTES_PER_DAY) + 1
+
+export const timeOfDay = (t: number): number => mod(t, MINUTES_PER_DAY)
+
+/** "Day 140, 14:20" */
+export function formatMissionTime(t: number): string {
+  return `Day ${dayOfMission(t)}, ${formatShipTime(timeOfDay(t))}`
+}
+
+/** First moment at or after `t` (mission time) when the link is open. */
+export function firstOpenAtOrAfter(windows: SyncWindow[], t: number): number {
+  const s = linkState(windows, timeOfDay(t))
+  return s.open ? t : t + s.minutesUntilNext
+}

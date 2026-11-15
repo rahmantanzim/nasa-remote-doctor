@@ -22,7 +22,7 @@ import {
   VIEW_H,
   VIEW_W,
 } from './bodyShape'
-import { FORECAST_WORD } from './labels'
+import { FORECAST_WORD } from '../data/words'
 
 interface Props {
   crewName: string

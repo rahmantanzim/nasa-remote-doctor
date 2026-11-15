@@ -1427,3 +1427,261 @@ button {
   padding-top: 8px;
   border-top: 1px solid var(--line-soft);
 }
+
+/* ------------------------------------------------------------------ */
+/* Segmented toggle (Today / Earth Report, Today / This week)         */
+/* ------------------------------------------------------------------ */
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+}
+
+.segmented button {
+  min-height: 42px;
+  min-width: 96px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* The toggle box itself reaches the 48px target (42px + padding + border). */
+.segmented button[aria-checked='true'] {
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.segmented button:hover {
+  color: var(--text);
+}
+
+/* Earth link bar: queue + reply */
+.link-queue {
+  color: var(--text);
+}
+
+.link-reply {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.link-reply::before {
+  content: '✉ ';
+}
+
+/* ------------------------------------------------------------------ */
+/* Earth Report view                                                  */
+/* ------------------------------------------------------------------ */
+
+.report-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr);
+  gap: 24px;
+  align-items: start;
+  flex: 1;
+}
+
+@media (max-width: 960px) {
+  .report-view {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.report-compose,
+.report-queue {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.report-compose-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.report-doc {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.report-doc-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.report-first {
+  border-left: 3px solid var(--text-muted);
+  padding: 4px 0 4px 12px;
+}
+
+.report-first-line {
+  font-size: 1.02rem;
+  color: var(--text);
+}
+
+.report-section h4 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.report-section ul {
+  margin: 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.report-foot {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.queue-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.queue-item {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.queue-item.is-replied {
+  border-color: var(--line);
+}
+
+.queue-title {
+  font-weight: 500;
+}
+
+.queue-status {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.reply {
+  border-left: 3px solid var(--ghost);
+  padding: 6px 0 6px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.94rem;
+}
+
+.reply-from {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.reply-note {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.queue-details summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.queue-details .report-doc {
+  margin-top: 6px;
+}
+
+/* Demo controls: clearly separate from real controls. */
+.demo-controls {
+  margin-top: 8px;
+  border: 1px dashed var(--text-faint);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Print: only the report, black on white                             */
+/* ------------------------------------------------------------------ */
+
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .earth-link,
+  .topbar,
+  .footer,
+  .report-queue,
+  .report-actions,
+  .report-compose-head,
+  .report-compose > .panel-sub {
+    display: none !important;
+  }
+  .app,
+  .report-view,
+  .report-compose {
+    display: block;
+    padding: 0;
+    border: none;
+    background: none;
+  }
+  .report-doc {
+    border: none;
+    background: none;
+    color: #000;
+    padding: 0;
+  }
+  .report-doc .section-label,
+  .report-section ul,
+  .report-foot {
+    color: #333;
+  }
+  .report-first {
+    border-left-color: #000;
+  }
+}

@@ -281,6 +281,7 @@ export interface ActionLogEntry {
   shipTime: string
 }
 
+/** Where a report is on its way to Earth (worked out from time, never stored). */
 export type QueueState = 'queued' | 'sent' | 'replied'
 
 export interface ReportSection {
@@ -288,22 +289,44 @@ export interface ReportSection {
   lines: string[]
 }
 
-export interface ReportReply {
-  from: string
-  text: string
-  /** Ship time the reply arrived, ISO string. */
-  receivedAt: string
+/** Facts the flight surgeon's reply rules read (kept with the report). */
+export interface ReportFacts {
+  findings: { part: BodyPartId; level: EscalationLevel; status: ForecastStatus }[]
+  oneAction: { title: string; part: BodyPartId | null; outcome: ActionOutcome | null }
+  checkInDone: boolean
+  extraDoseMSv: number
+  cumulativeDoseMSv: number
 }
 
+/** The link to Earth as it was when the report was queued. */
+export interface ReportLink {
+  delayMinutes: number
+  syncWindows: SyncWindow[]
+}
+
+/**
+ * An Earth report (SPEC F7). A snapshot: once queued, later changes to the
+ * data do not change what Earth receives.
+ */
 export interface EarthReport {
   id: string
   crewId: string
+  crewName: string
   type: 'daily' | 'weekly'
-  /** ISO string. */
-  createdAt: string
+  /** Mission day the report is about. */
+  day: number
+  /** When it was queued, mission time (minutes since Day 1, 00:00). */
+  queuedAt: number
   /** "What the doctor should look at first." */
   summaryFirstLine: string
   sections: ReportSection[]
-  queueState: QueueState
-  reply?: ReportReply
+  facts: ReportFacts
+  link: ReportLink
+}
+
+export interface ReportReply {
+  from: string
+  lines: string[]
+  /** Mission time the reply reached the ship. */
+  receivedAt: number
 }
