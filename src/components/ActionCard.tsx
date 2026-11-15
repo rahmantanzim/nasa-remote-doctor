@@ -64,12 +64,12 @@ export function ActionCard({ result, crew, isSelf }: Props) {
             {entry.outcome === 'done' ? (
               <>
                 <strong>Done.</strong> Logged at <span className="num">{entry.shipTime}</span> ship time
-                {recorder ? ` by ${recorder}` : ''}. It will be in the Earth report.
+                {recorder ? ` by ${recorder}` : ''}. It will be in the Earth Report.
               </>
             ) : (
               <>
                 <strong>Noted: not today.</strong> Logged at <span className="num">{entry.shipTime}</span>
-                {recorder ? ` by ${recorder}` : ''}. The Earth report will show it was put off.
+                {recorder ? ` by ${recorder}` : ''}. The Earth Report will show it was put off.
               </>
             )}
           </p>

@@ -1,6 +1,7 @@
 // Detail panel for the selected body part (SPEC.md F2), or a ranked list of
 // all 9 parts when nothing is selected. Reads engine output only.
 
+import { Suspense, lazy } from 'react'
 import { BODY_PART_BY_ID, HAZARDS } from '../data/bodyParts'
 import { BODY_PART_GUIDES } from '../data/guides'
 import { LEVELS } from '../data/levels'
@@ -8,7 +9,9 @@ import type { EngineResult } from '../engine'
 import type { BodyPartId, EscalationLevel } from '../types'
 import { FORECAST_WORD } from '../data/words'
 import { GuideLink } from './Guide'
-import { TrendChart } from './TrendChart'
+
+// The chart library is big: load it only when a body part is opened.
+const TrendChart = lazy(() => import('./TrendChart').then((m) => ({ default: m.TrendChart })))
 
 /** Amber attention class for Level 2+ (empty for Level 1). */
 const attnClass = (level: EscalationLevel) => (level >= 2 ? ` attn attn-${level}` : '')
@@ -130,7 +133,9 @@ function PartDetail({ result, part, onBack }: { result: EngineResult; part: Body
         <p>{status.landingDayForecast}</p>
       </section>
 
-      <TrendChart series={result.series[part]} />
+      <Suspense fallback={<p className="trend-loading">Loading chart…</p>}>
+        <TrendChart series={result.series[part]} />
+      </Suspense>
 
       <dl className="facts">
         <div>

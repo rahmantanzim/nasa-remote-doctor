@@ -629,10 +629,11 @@ button {
    fading   — Declining: faint, dotted outline, slow subtle flicker
               (this part is "fading away" by landing day) */
 .tone-solid .region-glow {
-  opacity: 0.38;
+  opacity: 0.45;
 }
 .tone-solid .region-shape {
-  opacity: 0.85;
+  opacity: 0.95;
+  stroke-width: 1.6;
 }
 
 .tone-drifting .region-glow {
@@ -676,7 +677,7 @@ button {
   fill: none;
 }
 .layer-sleep.tone-solid .region-glow {
-  opacity: 0.1;
+  opacity: 0.14;
 }
 .layer-sleep.tone-drifting .region-glow {
   opacity: 0.05;
@@ -686,9 +687,6 @@ button {
 }
 .layer-sleep.is-active .region-glow {
   opacity: 0.16;
-}
-.layer-sleep.tone-solid .region-shape {
-  stroke-dasharray: 3 4;
 }
 .layer-radiation .region-glow {
   fill: none;
@@ -704,8 +702,9 @@ button {
   stroke-linecap: round;
   stroke-width: 2;
 }
+/* Steady layers: a complete, unbroken line (healthy = whole). */
 .layer-radiation.tone-solid .region-shape {
-  stroke-dasharray: 1 7;
+  stroke-width: 1.5;
 }
 .layer-sleep .region-hit,
 .layer-radiation .region-hit {
@@ -1845,4 +1844,30 @@ button {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* Same height as the chart, so the panel does not jump while it loads. */
+.trend-loading {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+/* Phone: CMO tabs stack; the divider becomes a line above "Crew". */
+@media (max-width: 600px) {
+  .crew-switcher {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .crew-divider {
+    width: auto;
+    height: 1px;
+    margin: 6px 0 0;
+  }
+  .crew-group-label {
+    align-self: flex-start;
+  }
 }

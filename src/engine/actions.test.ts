@@ -24,7 +24,7 @@ describe('actions', () => {
     expect(r.oneActionPart).toBe('radiation')
     expect(r.oneAction.escalationLevel).toBe(3)
     expect(r.oneAction.how.join(' ')).toMatch(/backup medical officer/)
-    expect(r.oneAction.how.join(' ')).toMatch(/Earth report/)
+    expect(r.oneAction.how.join(' ')).toMatch(/Earth Report/)
   })
 
   it('Sam: One Action is "keep your routine" at Level 1', () => {

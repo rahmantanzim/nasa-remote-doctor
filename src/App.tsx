@@ -195,7 +195,7 @@ function Main({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart, m
             </div>
             {whatIfHabits && (
               <p className="what-if-banner" role="status">
-                What-if simulation — not real data. Your real action and Earth report do not change.
+                What-if simulation — not real data. Your real action and Earth Report do not change.
               </p>
             )}
             <BodyMap crewName={viewed.name} statuses={shown.statuses} selectedPart={selectedPart} onSelect={togglePart} />

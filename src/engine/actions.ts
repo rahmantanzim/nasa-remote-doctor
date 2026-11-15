@@ -40,7 +40,7 @@ function medicalOfficer(s: CrewSignals): string {
 function escalationSteps(level: EscalationLevel, s: CrewSignals): string[] {
   const steps: string[] = []
   if (level >= 2) steps.push(`Show ${medicalOfficer(s)} today.`)
-  if (level >= 3) steps.push('This goes in the Earth report. The flight surgeon will answer after the next sync.')
+  if (level >= 3) steps.push('This goes in the Earth Report. The flight surgeon will answer after the next sync.')
   return steps
 }
 
