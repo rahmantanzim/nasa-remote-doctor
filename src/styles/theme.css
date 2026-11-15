@@ -1742,3 +1742,74 @@ button {
   border-top: 1px solid var(--line);
   padding-top: 12px;
 }
+
+/* ------------------------------------------------------------------ */
+/* "What if" sliders                                                  */
+/* ------------------------------------------------------------------ */
+
+.what-if {
+  margin-top: 8px;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-soft);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Simulation mode is marked by a dashed border and words, not colour. */
+.what-if.is-active {
+  border: 1px dashed var(--text-muted);
+}
+
+.what-if-tag {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.what-if.is-active .what-if-tag {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.what-if-banner {
+  padding: 8px 12px;
+  border: 1px dashed var(--text-muted);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.slider {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 12px;
+}
+
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  grid-column: 1 / -1;
+  font-size: 0.92rem;
+}
+
+.slider input[type='range'] {
+  width: 100%;
+  height: var(--touch);
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.slider-real {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.button-quiet:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

@@ -10,7 +10,7 @@
 
 import { BODY_PART_BY_ID } from '../data/bodyParts'
 import * as P from '../sim/physiology'
-import type { BodyPartId, ForecastStatus, HazardId, Trend } from '../types'
+import type { BodyPartId, ForecastStatus, HazardId, ModelState, Trend } from '../types'
 import { type CrewSignals, stateDaysAgo, symptomDays } from './signals'
 
 export type Concern = 0 | 1 | 2
@@ -407,9 +407,36 @@ const FORECASTERS: Record<BodyPartId, (s: CrewSignals) => PartView> = {
   radiation,
 }
 
+/**
+ * "What if" mode (SPEC F10): the trend compares the what-if landing value
+ * with the real-habits landing value — "this change makes it better/worse".
+ * Key value per part, which direction is better, and the smallest change that
+ * counts (so a tiny slider move does not flip the words). Tolerances: assumption.
+ */
+const WHAT_IF_KEYS: Partial<Record<BodyPartId, { value: (m: ModelState) => number; lowerIsBetter: boolean; tolerance: number }>> = {
+  bones: { value: (m) => m.boneLossPercent, lowerIsBetter: true, tolerance: 0.2 },
+  muscles: { value: (m) => m.strengthIndex, lowerIsBetter: false, tolerance: 0.5 },
+  eyes: { value: (m) => m.sansScore, lowerIsBetter: true, tolerance: 2 },
+  sleep: { value: (m) => m.sleepDebtHours, lowerIsBetter: true, tolerance: 2 },
+  heart: { value: (m) => m.orthostaticRisk, lowerIsBetter: true, tolerance: 0.03 },
+  metabolism: { value: (m) => m.insulinResistance, lowerIsBetter: true, tolerance: 0.05 },
+  immune: { value: (m) => m.immuneStress, lowerIsBetter: true, tolerance: 0.05 },
+  brain: { value: (m) => m.stress, lowerIsBetter: true, tolerance: 0.05 },
+  // Radiation does not depend on these habits: keep the real trend.
+}
+
+function whatIfTrend(part: BodyPartId, s: CrewSignals, realTrend: Trend): Trend {
+  const key = WHAT_IF_KEYS[part]
+  if (!s.whatIf || !key) return realTrend
+  const change = key.value(s.landing) - key.value(s.whatIf.realLanding)
+  const worse = key.lowerIsBetter ? change : -change
+  return trendOf(worse, key.tolerance)
+}
+
 /** Forecast one body part. */
 export function forecastPart(part: BodyPartId, s: CrewSignals): PartForecast {
-  const view = FORECASTERS[part](s)
+  const real = FORECASTERS[part](s)
+  const view = { ...real, trend: whatIfTrend(part, s, real.trend) }
   return {
     part,
     // Primary hazard = first listed for the body part (SPEC.md F2 table).

@@ -17,7 +17,7 @@ import type {
 import { actionFor, chooseOneAction, rankStatuses } from './actions'
 import { assessBodyParts } from './escalation'
 import { type TrendSeries, trendSeries } from './series'
-import { type CrewSignals, buildSignals } from './signals'
+import { type CrewSignals, type Habits, buildSignals } from './signals'
 
 export interface EngineResult {
   signals: CrewSignals
@@ -42,8 +42,10 @@ export function runEngine(
   history: DailyRecord[],
   mission: Mission,
   environment: Environment = ENVIRONMENTS[mission.environment],
+  /** "What if" habits from today to landing (SPEC F10). Omit for real habits. */
+  whatIfHabits?: Habits,
 ): EngineResult {
-  const signals = buildSignals(crew, history, mission, environment)
+  const signals = buildSignals(crew, history, mission, environment, whatIfHabits)
   const statuses = assessBodyParts(signals)
   const ranked = rankStatuses(statuses)
   const { action, part } = chooseOneAction(statuses, signals)
@@ -68,6 +70,7 @@ export function evaluateCrew(
   mission: Mission,
   environment: Environment = ENVIRONMENTS[mission.environment],
   checkIns: CheckInsByDay = {},
+  whatIfHabits?: Habits,
 ): EngineResult {
-  return runEngine(crew, simulateCrew(crew, mission, environment, checkIns), mission, environment)
+  return runEngine(crew, simulateCrew(crew, mission, environment, checkIns), mission, environment, whatIfHabits)
 }

@@ -67,6 +67,11 @@ export interface CrewSignals {
   landing: ModelState
   /** Day-by-day projection from tomorrow to landing day. */
   projection: ProjectedDay[]
+  /**
+   * Set only in "What if" mode: the landing state with this week's REAL
+   * habits, so the forecast can say whether the what-if is better or worse.
+   */
+  whatIf: { realLanding: ModelState } | null
   /** Last RECENT_DAYS days. */
   recent: WindowStats
   /** The RECENT_DAYS days before that. */
@@ -134,6 +139,9 @@ export function stateDaysAgo(s: Pick<CrewSignals, 'history'>, daysAgo: number): 
   return s.history[i].model
 }
 
+/** Daily habits that drive the landing projection. */
+export type Habits = Pick<WindowStats, 'exerciseMinutes' | 'sleepHours' | 'thighCuffHours'>
+
 /** One projected day: the expected body state if habits stay the same. */
 export interface ProjectedDay {
   day: number
@@ -151,7 +159,7 @@ export function projectToLanding(
   history: DailyRecord[],
   mission: Mission,
   environment: Environment,
-  habits: Pick<WindowStats, 'exerciseMinutes' | 'sleepHours' | 'thighCuffHours'>,
+  habits: Habits,
 ): ProjectedDay[] {
   const { baseline } = crew
   const unload = P.unloading(environment.gravityG)
@@ -192,6 +200,8 @@ export function buildSignals(
   history: DailyRecord[],
   mission: Mission,
   environment: Environment,
+  /** "What if" habits from today to landing (SPEC F10). Default: this week's real habits. */
+  whatIfHabits?: Habits,
 ): CrewSignals {
   if (history.length === 0) throw new Error(`No records for ${crew.id}`)
   const { baseline } = crew
@@ -233,7 +243,8 @@ export function buildSignals(
     null,
   )
 
-  const projection = projectToLanding(crew, history, mission, environment, recent)
+  const projection = projectToLanding(crew, history, mission, environment, whatIfHabits ?? recent)
+  const realProjection = whatIfHabits ? projectToLanding(crew, history, mission, environment, recent) : null
 
   return {
     crew,
@@ -247,6 +258,9 @@ export function buildSignals(
     now: today.model,
     landing: projection.length > 0 ? projection[projection.length - 1].model : today.model,
     projection,
+    whatIf: realProjection
+      ? { realLanding: realProjection.length > 0 ? realProjection[realProjection.length - 1].model : today.model }
+      : null,
     recent,
     prior,
     expected,
@@ -265,4 +279,13 @@ export function buildSignals(
 /** Symptom days over the full SYMPTOM_WINDOW_DAYS window. */
 export function symptomDays(s: CrewSignals, key: SymptomKey): number {
   return s.symptomsRecent[key] + s.symptomsPrior[key]
+}
+
+/** This week's real habits (the default for "What if"). */
+export function currentHabits(s: Pick<CrewSignals, 'recent'>): Habits {
+  return {
+    exerciseMinutes: s.recent.exerciseMinutes,
+    sleepHours: s.recent.sleepHours,
+    thighCuffHours: s.recent.thighCuffHours,
+  }
 }

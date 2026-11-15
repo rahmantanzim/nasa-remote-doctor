@@ -5,7 +5,7 @@
 //   Earth Report: report preview, Earth queue, replies (SPEC F7).
 // Who may see whose data is decided by the store (access.ts), not here.
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { ActionCard } from './components/ActionCard'
 import { BodyMap } from './components/BodyMap'
 import { BodyPartPanel } from './components/BodyPartPanel'
@@ -13,11 +13,13 @@ import { CheckInStrip } from './components/CheckInStrip'
 import { EarthLinkBar } from './components/EarthLinkBar'
 import { ReportView } from './components/ReportView'
 import { SignIn } from './components/SignIn'
+import { WhatIf } from './components/WhatIf'
 import { CREW } from './data/crew'
 import { ENVIRONMENTS } from './data/environments'
 import { LEVELS } from './data/levels'
 import { MISSION } from './data/mission'
-import { type EngineResult, evaluateCrew } from './engine'
+import { type EngineResult, evaluateCrew, runEngine } from './engine'
+import { type Habits, currentHabits } from './engine/signals'
 import { timeOfDay } from './engine/earthLink'
 import { useOfflineReady } from './offline'
 import { missionNow, useMissionDay } from './store/shipClock'
@@ -103,6 +105,15 @@ function Main({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart, m
   const { day, landingDay, daysToLanding } = result.signals
   const isSelf = viewed.id === user.id
 
+  // "What if" (SPEC F10): only for the crew member it was set for. Reuses the
+  // real history; only the landing projection changes.
+  const [whatIf, setWhatIf] = useState<{ crewId: string; habits: Habits } | null>(null)
+  const whatIfHabits = whatIf?.crewId === viewed.id ? whatIf.habits : null
+  const shown = useMemo(
+    () => (whatIfHabits ? runEngine(viewed, result.signals.history, mission, undefined, whatIfHabits) : result),
+    [whatIfHabits, viewed, result, mission],
+  )
+
   return (
     <>
       <header className="topbar">
@@ -166,11 +177,22 @@ function Main({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart, m
             <div className="map-caption">
               <span>
                 <span className="ghost">Ghost Self</span> · {isSelf ? 'You' : viewed.name} on landing day (Day{' '}
-                {landingDay}), if habits stay the same
+                {landingDay}), {whatIfHabits ? 'with the what-if habits below' : 'if habits stay the same'}
               </span>
               <span>Simulated crew data</span>
             </div>
-            <BodyMap crewName={viewed.name} statuses={result.statuses} selectedPart={selectedPart} onSelect={togglePart} />
+            {whatIfHabits && (
+              <p className="what-if-banner" role="status">
+                What-if simulation — not real data. Your real action and Earth report do not change.
+              </p>
+            )}
+            <BodyMap crewName={viewed.name} statuses={shown.statuses} selectedPart={selectedPart} onSelect={togglePart} />
+            <WhatIf
+              real={currentHabits(result.signals)}
+              value={whatIfHabits}
+              onChange={(habits) => setWhatIf({ crewId: viewed.id, habits })}
+              onReset={() => setWhatIf(null)}
+            />
           </section>
 
           <CheckInStrip
@@ -184,7 +206,7 @@ function Main({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart, m
 
           <ActionCard result={result} crew={viewed} isSelf={isSelf} />
 
-          <BodyPartPanel result={result} selectedPart={selectedPart} onSelect={selectPart} />
+          <BodyPartPanel result={shown} selectedPart={selectedPart} onSelect={selectPart} />
         </main>
       )}
     </>
