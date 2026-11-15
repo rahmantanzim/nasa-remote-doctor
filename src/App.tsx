@@ -15,12 +15,14 @@ import { ReportView } from './components/ReportView'
 import { SignIn } from './components/SignIn'
 import { WhatIf } from './components/WhatIf'
 import { CREW } from './data/crew'
-import { ENVIRONMENTS } from './data/environments'
+import { ENVIRONMENTS, ENVIRONMENT_IDS } from './data/environments'
 import { LEVELS } from './data/levels'
 import { MISSION } from './data/mission'
 import { type EngineResult, evaluateCrew, runEngine } from './engine'
 import { type Habits, currentHabits } from './engine/signals'
 import { timeOfDay } from './engine/earthLink'
+import { buildMission } from './engine/mission'
+import { setEnvironment, useEnvironmentId } from './store/environment'
 import { useOfflineReady } from './offline'
 import { missionNow, useMissionDay } from './store/shipClock'
 import {
@@ -37,7 +39,7 @@ import {
   useView,
   useVisibleReports,
 } from './store/useAppStore'
-import type { CrewMember, EarthReport, Mission } from './types'
+import type { CrewMember, EarthReport, EnvironmentId, Mission } from './types'
 
 const DISCLAIMER = 'Prototype for education. Not a medical device. Simulated crew data.'
 
@@ -46,8 +48,9 @@ function App() {
   const offlineReady = useOfflineReady()
   const reports = useVisibleReports()
   const day = useMissionDay()
-  // The mission follows the ship clock's day (capped at landing day).
-  const mission = useMemo<Mission>(() => ({ ...MISSION, currentDay: Math.min(day, MISSION.landingDay) }), [day])
+  const environmentId = useEnvironmentId()
+  // The mission follows the environment preset and the ship clock's day.
+  const mission = useMemo<Mission>(() => buildMission(MISSION, environmentId, day), [environmentId, day])
 
   return (
     <>
@@ -119,7 +122,16 @@ function Main({ user, isCrewMedicalOfficer, visibleCrew, viewed, selectedPart, m
       <header className="topbar">
         <div className="brand">
           <span className="brand-name">Remote Doctor</span>
-          <span className="brand-env">{ENVIRONMENTS[mission.environment].name}</span>
+          <label className="env-select">
+            <span className="visually-hidden">Location</span>
+            <select value={mission.environment} onChange={(e) => setEnvironment(e.target.value as EnvironmentId)}>
+              {ENVIRONMENT_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {ENVIRONMENTS[id].name}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <div className="segmented view-toggle" role="radiogroup" aria-label="View">

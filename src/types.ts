@@ -104,6 +104,12 @@ export interface Environment {
   gravityG: number
   /** Background radiation dose rate, mSv per day (approx.). */
   radiationMSvPerDay: number
+  /**
+   * Share of a deep-space solar particle event dose that reaches crew here
+   * (1 = open deep space). Earth's magnetic field, a planet blocking half
+   * the sky, or an atmosphere all lower it.
+   */
+  solarEventExposure: number
   /** Daily windows when the link to Earth is open. */
   syncWindows: SyncWindow[]
 }

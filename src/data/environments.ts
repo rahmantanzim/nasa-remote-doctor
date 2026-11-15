@@ -15,6 +15,9 @@ export const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     // ~0.5 mSv/day. Source: SPEC.md §6; NASA reports ISS crew dose of
     // roughly 0.3–0.8 mSv/day depending on solar cycle and orbit.
     radiationMSvPerDay: 0.5,
+    // Earth's magnetic field deflects most solar particles at ISS altitude
+    // (geomagnetic shielding). 0.1: assumption.
+    solarEventExposure: 0.1,
     // Near-continuous relay coverage; modelled as 4 long windows.
     // Assumption.
     syncWindows: [
@@ -37,6 +40,9 @@ export const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     // (LND) measured ~1.37 mSv/day dose equivalent on the lunar surface
     // (Zhang et al., Science Advances 2020). SPEC.md §6.
     radiationMSvPerDay: 1.4,
+    // The Moon blocks half the sky; no atmosphere or magnetic field.
+    // 0.5: geometry (half the sky), assumption.
+    solarEventExposure: 0.5,
     // Assumption: relay-satellite passes, 3 windows per day.
     syncWindows: [
       { start: '02:00', durationMinutes: 120 }, // assumption
@@ -56,6 +62,9 @@ export const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     // ~1.8 mSv/day. Source: SPEC.md §6; MSL RAD measured ~1.84 mSv/day
     // during cruise to Mars (Zeitlin et al., Science 2013).
     radiationMSvPerDay: 1.8,
+    // Open deep space: the full event dose (the mission event values are
+    // set for transit). By definition.
+    solarEventExposure: 1,
     // Assumption: Deep Space Network-style passes, 3 short windows per day.
     // 14:20 matches the SPEC F6 example ("Next sync 14:20").
     syncWindows: [
@@ -76,6 +85,9 @@ export const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     // ~0.7 mSv/day. Source: SPEC.md §6; Curiosity RAD measured ~0.64 mSv/day
     // on the surface (Hassler et al., Science 2014). Atmosphere + planet shield.
     radiationMSvPerDay: 0.7,
+    // Mars blocks half the sky and its thin atmosphere (~20 g/cm²) stops
+    // more of the lower-energy particles. 0.3: assumption.
+    solarEventExposure: 0.3,
     // Assumption: orbiter relay passes, 2 windows per sol.
     syncWindows: [
       { start: '09:00', durationMinutes: 30 }, // assumption

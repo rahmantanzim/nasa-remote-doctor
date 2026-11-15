@@ -359,11 +359,18 @@ export const NEUTRON_FRACTION = 0.3
 /** Galactic-ray dose varies little day to day: SD as a fraction of rate. Assumption. */
 export const DAILY_DOSE_VARIATION_SD = 0.03
 
-/** Extra dose today from mission events (e.g. a solar particle event), mSv. */
-export function eventDose(day: number, events: MissionEvent[], sheltered: boolean): number {
-  return events
-    .filter((e) => e.day === day)
-    .reduce((sum, e) => sum + (sheltered ? e.doseShelteredMSv : e.doseUnshelteredMSv), 0)
+/**
+ * Extra dose today from mission events (e.g. a solar particle event), mSv.
+ * Event doses are given for open deep space; `exposure` scales them for the
+ * environment (Environment.solarEventExposure).
+ */
+export function eventDose(day: number, events: MissionEvent[], sheltered: boolean, exposure = 1): number {
+  return (
+    exposure *
+    events
+      .filter((e) => e.day === day)
+      .reduce((sum, e) => sum + (sheltered ? e.doseShelteredMSv : e.doseUnshelteredMSv), 0)
+  )
 }
 
 // ---------------------------------------------------------------------------

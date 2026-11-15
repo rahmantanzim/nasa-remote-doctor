@@ -1813,3 +1813,36 @@ button {
   opacity: 0.45;
   cursor: default;
 }
+
+/* ------------------------------------------------------------------ */
+/* Environment switch                                                 */
+/* ------------------------------------------------------------------ */
+
+.env-select select {
+  min-height: var(--touch);
+  margin-top: 2px;
+  padding: 0 32px 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.env-select select:hover {
+  border-color: var(--text-faint);
+  color: var(--text);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

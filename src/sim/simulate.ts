@@ -125,7 +125,7 @@ export function simulateCrew(
     const immuneStress = P.immuneStress(stress, sleepLoad, unload)
     const radiationDose =
       environment.radiationMSvPerDay * (1 + P.DAILY_DOSE_VARIATION_SD * n('dose')) +
-      P.eventDose(day, mission.events, crew.behaviour.shelteredDuringSPE)
+      P.eventDose(day, mission.events, crew.behaviour.shelteredDuringSPE, environment.solarEventExposure)
 
     state = {
       hipBoneDensity,
