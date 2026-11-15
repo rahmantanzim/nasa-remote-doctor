@@ -1685,3 +1685,60 @@ button {
     border-left-color: #000;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* "How to measure" guides                                            */
+/* ------------------------------------------------------------------ */
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 10px;
+}
+
+.section-head .section-label {
+  margin: 0;
+}
+
+/* Text-style, but still a 48px-tall target. */
+.guide-link {
+  min-height: var(--touch);
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.overlay-top {
+  z-index: 60;
+  align-items: flex-start;
+}
+
+.guide {
+  width: 100%;
+  max-width: 560px;
+  height: fit-content;
+  margin-top: 6vh;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guide:focus {
+  outline: none;
+}
+
+.guide-escalate {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}

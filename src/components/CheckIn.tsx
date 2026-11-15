@@ -19,7 +19,9 @@ import {
   setMood,
   stepCheckInValue,
 } from '../engine/checkIn'
+import { GUIDE_FOR_FIELD, INDICATOR_GUIDES } from '../data/guides'
 import type { Symptoms } from '../types'
+import { GuideLink } from './Guide'
 
 interface Props {
   day: number
@@ -34,21 +36,16 @@ export function CheckIn({ day, initial, editing, onSave, onClose }: Props) {
   const [answers, setAnswers] = useState<CheckInAnswers>(initial)
   const dialogRef = useRef<HTMLDivElement>(null)
 
-  // Focus the dialog on open; Escape closes; focus returns to the opener (browser default on unmount + button).
+  // Focus the dialog on open; focus returns to the opener on close. Page behind does not scroll.
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null
     dialogRef.current?.focus()
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
       opener?.focus()
     }
-  }, [onClose])
+  }, [])
 
   const toggle = (key: keyof Symptoms) =>
     setAnswers((a) => ({ ...a, symptoms: { ...a.symptoms, [key]: !a.symptoms[key] } }))
@@ -62,6 +59,9 @@ export function CheckIn({ day, initial, editing, onSave, onClose }: Props) {
         aria-labelledby="checkin-title"
         tabIndex={-1}
         ref={dialogRef}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') onClose()
+        }}
       >
         <header className="checkin-head">
           <div>
@@ -97,9 +97,12 @@ export function CheckIn({ day, initial, editing, onSave, onClose }: Props) {
         </section>
 
         <section aria-labelledby="ci-mood">
-          <h3 id="ci-mood" className="section-label">
-            How is your mood?
-          </h3>
+          <div className="section-head">
+            <h3 id="ci-mood" className="section-label">
+              How is your mood?
+            </h3>
+            <GuideLink guide={INDICATOR_GUIDES.mood} />
+          </div>
           <div className="mood-row" role="radiogroup" aria-labelledby="ci-mood">
             {([1, 2, 3, 4, 5] as const).map((m) => (
               <button
@@ -118,9 +121,12 @@ export function CheckIn({ day, initial, editing, onSave, onClose }: Props) {
         </section>
 
         <section aria-labelledby="ci-eyes">
-          <h3 id="ci-eyes" className="section-label">
-            Head and eyes (signs of fluid shift)
-          </h3>
+          <div className="section-head">
+            <h3 id="ci-eyes" className="section-label">
+              Head and eyes (signs of fluid shift)
+            </h3>
+            <GuideLink guide={INDICATOR_GUIDES.headAndEyes} />
+          </div>
           <div className="toggle-row">
             {SANS_SYMPTOMS.map((s) => (
               <button
@@ -137,9 +143,12 @@ export function CheckIn({ day, initial, editing, onSave, onClose }: Props) {
         </section>
 
         <section aria-labelledby="ci-other">
-          <h3 id="ci-other" className="section-label">
-            Anything else today?
-          </h3>
+          <div className="section-head">
+            <h3 id="ci-other" className="section-label">
+              Anything else today?
+            </h3>
+            <GuideLink guide={INDICATOR_GUIDES.otherSymptoms} />
+          </div>
           <div className="toggle-row">
             {OTHER_SYMPTOMS.map((s) => (
               <button
@@ -185,9 +194,12 @@ function Stepper({
   const shown = formatCheckInValue(field.key, value)
   return (
     <div className="stepper">
-      <label htmlFor={id} className="stepper-label">
-        {field.label}
-      </label>
+      <div className="section-head">
+        <label htmlFor={id} className="stepper-label">
+          {field.label}
+        </label>
+        <GuideLink guide={INDICATOR_GUIDES[GUIDE_FOR_FIELD[field.key]]} />
+      </div>
       <div className="stepper-controls">
         <button type="button" className="step-button" aria-label={`Lower ${field.label}`} onClick={() => onStep(-1)}>
           −

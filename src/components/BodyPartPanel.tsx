@@ -2,10 +2,12 @@
 // all 9 parts when nothing is selected. Reads engine output only.
 
 import { BODY_PART_BY_ID, HAZARDS } from '../data/bodyParts'
+import { BODY_PART_GUIDES } from '../data/guides'
 import { LEVELS } from '../data/levels'
 import type { EngineResult } from '../engine'
 import type { BodyPartId, EscalationLevel } from '../types'
 import { FORECAST_WORD } from '../data/words'
+import { GuideLink } from './Guide'
 import { TrendChart } from './TrendChart'
 
 /** Amber attention class for Level 2+ (empty for Level 1). */
@@ -139,7 +141,9 @@ function PartDetail({ result, part, onBack }: { result: EngineResult; part: Body
         </div>
         <div>
           <dt>How it is measured in space</dt>
-          <dd>{info.howMeasured}</dd>
+          <dd>
+            {info.howMeasured} <GuideLink guide={BODY_PART_GUIDES[part]} />
+          </dd>
         </div>
       </dl>
     </>
